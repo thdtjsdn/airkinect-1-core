@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="Flex" version="4">
+  <component name="Flex.Build.Configuration">
+    <option name="DO_BUILD" value="true" />
+    <option name="MAIN_CLASS" value="com.as3nui.airkinect.manager.demos.AirKinectManagerDemos" />
+    <option name="OUTPUT_FILE_NAME" value="AIRKinectManagerDemos.swf" />
+    <option name="TARGET_PLAYER_VERSION" value="10.2" />
+    <option name="VERSION" value="3" />
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/bin" />
+    <output-test url="file://$MODULE_DIR$/bin" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Shared Libs" level="project" />
+    <orderEntry type="module" module-name="AIRKinect Extension" />
+    <orderEntry type="module" module-name="AIRKinect Manager" />
+  </component>
+</module>
+

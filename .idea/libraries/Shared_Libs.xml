@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Shared Libs" type="flex">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/flash development/Shared Libs" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/flash development/Shared Libs" recursive="false" />
+  </library>
+</component>
