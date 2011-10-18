@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/flash development/AIRKinect Demos/AIRKinect Demos.iml" filepath="$PROJECT_DIR$/flash development/AIRKinect Demos/AIRKinect Demos.iml" />
+      <module fileurl="file://$PROJECT_DIR$/flash development/AIRKinect Extension/AIRKinect Extension.iml" filepath="$PROJECT_DIR$/flash development/AIRKinect Extension/AIRKinect Extension.iml" />
+      <module fileurl="file://$PROJECT_DIR$/flash development/AIRKinect Manager/AIRKinect Manager.iml" filepath="$PROJECT_DIR$/flash development/AIRKinect Manager/AIRKinect Manager.iml" />
+      <module fileurl="file://$PROJECT_DIR$/flash development/AIRKinect Manager Demos/AIRKinect Manager Demos.iml" filepath="$PROJECT_DIR$/flash development/AIRKinect Manager Demos/AIRKinect Manager Demos.iml" />
+    </modules>
+  </component>
+</project>
+
