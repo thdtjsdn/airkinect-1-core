@@ -4,9 +4,9 @@
  * Date: 10/3/11
  * Time: 5:28 PM
  */
-package com.as3nui.nui.airkinect.manager.gestures {
-	import com.as3nui.nui.airkinect.manager.regions.Region;
-	import com.as3nui.nui.airkinect.manager.skeleton.Skeleton;
+package com.as3nui.airkinect.manager.gestures {
+	import com.as3nui.airkinect.manager.regions.Region;
+	import com.as3nui.airkinect.manager.skeleton.Skeleton;
 
 	import org.osflash.signals.Signal;
 

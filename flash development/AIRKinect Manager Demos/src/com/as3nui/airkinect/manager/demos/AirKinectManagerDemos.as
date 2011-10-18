@@ -6,13 +6,13 @@
  */
 package com.as3nui.airkinect.manager.demos {
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
-	import com.as3nui.nui.airkinect.manager.AIRKinectManager;
-	import com.as3nui.nui.airkinect.manager.gestures.AIRKinectGestureManager;
-	import com.as3nui.nui.airkinect.manager.gestures.SwipeGesture;
-	import com.as3nui.nui.airkinect.manager.regions.Region;
-	import com.as3nui.nui.airkinect.manager.regions.RegionPlanes;
-	import com.as3nui.nui.airkinect.manager.regions.TrackedRegion;
-	import com.as3nui.nui.airkinect.manager.skeleton.Skeleton;
+	import com.as3nui.airkinect.manager.AIRKinectManager;
+	import com.as3nui.airkinect.manager.gestures.AIRKinectGestureManager;
+	import com.as3nui.airkinect.manager.gestures.SwipeGesture;
+	import com.as3nui.airkinect.manager.regions.Region;
+	import com.as3nui.airkinect.manager.regions.RegionPlanes;
+	import com.as3nui.airkinect.manager.regions.TrackedRegion;
+	import com.as3nui.airkinect.manager.skeleton.Skeleton;
 
 	import flash.display.Sprite;
 	import flash.display.StageAlign;

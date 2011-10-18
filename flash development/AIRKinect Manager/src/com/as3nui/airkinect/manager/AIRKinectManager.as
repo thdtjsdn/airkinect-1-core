@@ -4,13 +4,13 @@
  * Date: 10/1/11
  * Time: 3:50 PM
  */
-package com.as3nui.nui.airkinect.manager {
+package com.as3nui.airkinect.manager {
 	import com.as3nui.nativeExtensions.kinect.AIRKinect;
 	import com.as3nui.nativeExtensions.kinect.AIRKinectCameraConstants;
 	import com.as3nui.nativeExtensions.kinect.data.NUITransformSmoothParameters;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
-	import com.as3nui.nui.airkinect.manager.skeleton.Skeleton;
+	import com.as3nui.airkinect.manager.skeleton.Skeleton;
 
 	import flash.geom.PerspectiveProjection;
 	import flash.utils.Dictionary;
