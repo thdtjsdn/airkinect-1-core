@@ -1,18 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KinectExtension", "KinectExtension\KinectExtension.vcxproj", "{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AIRKinectExtension", "KinectExtension\KinectExtension.vcxproj", "{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Win32 = Debug|Win32
-		Release|Win32 = Release|Win32
+		Debug|ADL = Debug|ADL
+		Release|ADL = Release|ADL
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Debug|Win32.ActiveCfg = Debug|Win32
-		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Debug|Win32.Build.0 = Debug|Win32
-		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Release|Win32.ActiveCfg = Release|Win32
-		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Release|Win32.Build.0 = Release|Win32
+		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Debug|ADL.ActiveCfg = Debug|Win32
+		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Debug|ADL.Build.0 = Debug|Win32
+		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Release|ADL.ActiveCfg = Release|Win32
+		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Release|ADL.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

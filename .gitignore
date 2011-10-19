@@ -11,3 +11,5 @@
 /flash development/AIRKinect Manager Demos/bin
 /native development/windows/AIRKinectExtension/Debug
 /native development/windows/AIRKinectExtension/ipch
+/native development/windows/AIRKinectExtension/KinectExtension/Debug
+/native development/windows/AIRKinectExtension/KinectExtension/Release

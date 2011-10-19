@@ -9,11 +9,10 @@ AIRKinectAdapter::AIRKinectAdapter(){
 
 void AIRKinectAdapter::reset() {
 	context							= NULL;
-
+		
 	RGBFrameBuffer					= NULL;
 	depthFrameBuffer				= NULL;
 
-	
 	m_hNextDepthFrameEvent			= NULL;
     m_hNextRGBFrameEvent			= NULL;
     m_hNextSkeletonEvent			= NULL;
@@ -26,6 +25,7 @@ void AIRKinectAdapter::reset() {
 }
 
 void AIRKinectAdapter::setDefaultSmoothingParameters() {
+	//OutputDebugString( "AIRKinect Adapter :: setDefaultSmoothingParameters\n" );
 	m_transformSmoothingParameters.fCorrection=0.5f;
 	m_transformSmoothingParameters.fSmoothing=0.5f;
 	m_transformSmoothingParameters.fPrediction =0.5f;
@@ -34,13 +34,14 @@ void AIRKinectAdapter::setDefaultSmoothingParameters() {
 }
 
 bool AIRKinectAdapter::isAvailable() {
-
+	//OutputDebugString( "AIRKinect Adapter :: isAvailable\n" );
 	HRESULT hr = NuiInitialize(NUI_INITIALIZE_FLAG_USES_SKELETON);
 	NuiShutdown( );
 	return !FAILED(hr);
 }
 
 HRESULT AIRKinectAdapter::start() {
+	//OutputDebugString( "AIRKinect Adapter :: Start\n" );
 	HRESULT                hr;
 
     m_hNextDepthFrameEvent	= CreateEvent( NULL, TRUE, FALSE, NULL );
@@ -48,7 +49,7 @@ HRESULT AIRKinectAdapter::start() {
     m_hNextSkeletonEvent	= CreateEvent( NULL, TRUE, FALSE, NULL );
   
 	hr = NuiInitialize(NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX | NUI_INITIALIZE_FLAG_USES_SKELETON | NUI_INITIALIZE_FLAG_USES_COLOR);
-
+	
     if (FAILED(hr)) return hr;
 
     hr = NuiSkeletonTrackingEnable( m_hNextSkeletonEvent, 0 );
@@ -66,6 +67,7 @@ HRESULT AIRKinectAdapter::start() {
 }
 
 void AIRKinectAdapter::dispose( ){
+	//OutputDebugString( "AIRKinect Adapter :: Dispose\n" );
     if(m_hEvNuiProcessStop!=NULL) {
         SetEvent(m_hEvNuiProcessStop);
 
@@ -77,9 +79,11 @@ void AIRKinectAdapter::dispose( ){
     }
 
     NuiShutdown( );
+	
     if( m_hNextSkeletonEvent && ( m_hNextSkeletonEvent != INVALID_HANDLE_VALUE ) ) {
         CloseHandle( m_hNextSkeletonEvent );
         m_hNextSkeletonEvent = NULL;
+		NuiSkeletonTrackingDisable();
     }
 
     if( m_hNextDepthFrameEvent && ( m_hNextDepthFrameEvent != INVALID_HANDLE_VALUE ) ) {
@@ -95,6 +99,7 @@ void AIRKinectAdapter::dispose( ){
 }
 
 DWORD WINAPI AIRKinectAdapter::processThread(LPVOID pParam) {
+	//OutputDebugString( "AIRKinect Adapter :: processThread\n" );
 	AIRKinectAdapter *pthis=(AIRKinectAdapter *) pParam;
     HANDLE	hEvents[4];
     int			nEventIdx;
@@ -128,6 +133,7 @@ DWORD WINAPI AIRKinectAdapter::processThread(LPVOID pParam) {
 }
 
 void AIRKinectAdapter::onRGBFrame( ) {
+	//OutputDebugString( "AIRKinect Adapter :: onRGBFrame\n" );
     const NUI_IMAGE_FRAME * pImageFrame = NULL;
 
     HRESULT hr = NuiImageStreamGetNextFrame(m_pRGBStreamHandle, 0, &pImageFrame );
@@ -145,7 +151,7 @@ void AIRKinectAdapter::onRGBFrame( ) {
     }
     else
     {
-        OutputDebugString( L"Buffer length of received texture is bogus\r\n" );
+        //OutputDebugString( "Buffer length of received texture is bogus\r\n" );
     }
 
     NuiImageStreamReleaseFrame( m_pRGBStreamHandle, pImageFrame );
@@ -153,6 +159,7 @@ void AIRKinectAdapter::onRGBFrame( ) {
 
 
 void AIRKinectAdapter::onDepthFrame( ) {
+	//OutputDebugString( "AIRKinect Adapter :: onDepthFrame\n" );
     const NUI_IMAGE_FRAME * pImageFrame = NULL;
 
     HRESULT hr = NuiImageStreamGetNextFrame( m_pDepthStreamHandle, 0, &pImageFrame );
@@ -169,13 +176,14 @@ void AIRKinectAdapter::onDepthFrame( ) {
 		const uint8_t* level = (const uint8_t*) "";
 		FREDispatchStatusEventAsync(context, statusCode, level);
     } else {
-        OutputDebugString( L"Buffer length of received texture is bogus\r\n" );
+        //OutputDebugString( "Buffer length of received texture is bogus\r\n" );
     }
 
     NuiImageStreamReleaseFrame( m_pDepthStreamHandle, pImageFrame );
 }
 
 void AIRKinectAdapter::onSkeletonFrame( ) {
+	//OutputDebugString( "AIRKinect Adapter :: onSkeletonFrame\n" );
 	NUI_SKELETON_FRAME SkeletonFrame;
 
     HRESULT hr = NuiSkeletonGetNextFrame( 0, &SkeletonFrame );
@@ -190,14 +198,17 @@ void AIRKinectAdapter::onSkeletonFrame( ) {
 }
 
 void AIRKinectAdapter::setTransformSmoothingParameters(NUI_TRANSFORM_SMOOTH_PARAMETERS smoothingParameters) {
+	//OutputDebugString( "AIRKinect Adapter :: setTransformSmoothingParameters\n" );
 	m_transformSmoothingParameters = smoothingParameters;
 }
 
 
 HRESULT AIRKinectAdapter::cameraElevationGetAngle(LONG * value) {
+	//OutputDebugString( "AIRKinect Adapter :: cameraElevationGetAngle\n" );
 	return NuiCameraElevationGetAngle(value);
 }
 
 HRESULT AIRKinectAdapter::cameraElevationSetAngle(LONG value) {
+	//OutputDebugString( "AIRKinect Adapter :: cameraElevationSetAngle\n" );
 	return NuiCameraElevationSetAngle(value);
 }

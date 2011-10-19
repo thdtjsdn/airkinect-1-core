@@ -17,7 +17,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Shared Libs" level="project" />
-    <orderEntry type="module" module-name="AIRKinect Extension" />
     <orderEntry type="module" module-name="AIRKinect Manager" />
   </component>
 </module>

@@ -9,11 +9,13 @@ extern "C" {
 	NUI_TRANSFORM_SMOOTH_PARAMETERS _transformSmoothingParameters;
 
 	FREObject AIRKINECT_init(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) {
+		//OutputDebugString( "AIRKinect :: init\n" );
 		g_AIRKinectAdapter.setDefaultSmoothingParameters();
 		return NULL;
 	}
 
 	FREObject AIRKINECT_startKinect(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) {
+		//OutputDebugString( "AIRKINECT_startKinect\n" );
 		HRESULT hr = g_AIRKinectAdapter.start();
 
 		bool success = !FAILED(hr);
@@ -22,12 +24,14 @@ extern "C" {
 		return retObj;
 	}
 	
-	FREObject AIRKINECT_stopKinect(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) {
+	FREObject AIRKINECT_stopKinect(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) {\
+		//OutputDebugString( "AIRKINECT_stopKinect\n" );
 		g_AIRKinectAdapter.dispose();
 		return NULL;
 	}
 
 	FREObject AIRKINECT_avaliableKinect(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) {
+		//OutputDebugString( "AIRKINECT_avaliableKinect\n" );
 		FREObject retVal;
 
 		bool success = g_AIRKinectAdapter.isAvailable();
@@ -36,6 +40,7 @@ extern "C" {
 	}
 
 	FREObject AIRKINECT_getKinectAngle(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
+		//OutputDebugString( "AIRKINECT_getKinectAngle\n" );
 		long value;
 		g_AIRKinectAdapter.cameraElevationGetAngle(&value);
 		
@@ -45,6 +50,7 @@ extern "C" {
 	}
 
 	FREObject AIRKINECT_setKinectAngle(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
+		//OutputDebugString( "AIRKINECT_setKinectAngle\n" );
 		int32_t value;
 		FREGetObjectAsInt32(argv[0], &value);
 
@@ -53,6 +59,7 @@ extern "C" {
 	}
 
 	FREObject AIRKINECT_setTransformSmoothingParameters(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
+		//OutputDebugString( "AIRKINECT_setTransformSmoothingParameters\n" );
 		FREObject retVal;
 		if(argc > 0) {
 			FREObject smoothingParams = argv[0];	
@@ -93,6 +100,7 @@ extern "C" {
 
 
 	FREObject AIRKINECT_getSkeletonFrameData(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
+		//OutputDebugString( "AIRKINECT_getSkeletonFrameData\n" );
 		
 		NUI_SKELETON_FRAME SkeletonFrame = g_AIRKinectAdapter.skeletonFrameBuffer;
 		FREObject skeletonFrame, skeletonsPositions;
@@ -138,6 +146,7 @@ extern "C" {
 	}
 
 	FREObject AIRKINECT_getRGBFrame(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
+		//OutputDebugString( "AIRKINECT_getRGBFrame\n" );
 		BYTE * pBuffer = g_AIRKinectAdapter.RGBFrameBuffer;
 
 		DWORD width = 640;
@@ -170,6 +179,7 @@ extern "C" {
 	}
 
 	FREObject AIRKINECT_getDepthFrame(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
+		//OutputDebugString( "AIRKINECT_getDepthFrame\n" );
 		BYTE * pBuffer = g_AIRKinectAdapter.depthFrameBuffer;
 		
 		DWORD width = 320;
@@ -205,6 +215,7 @@ extern "C" {
 
 
 	void contextInitializer(void* extData, const uint8_t* ctxType, FREContext ctx, uint32_t* numFunctions, const FRENamedFunction** functions) {
+		//OutputDebugString( "contextInitializer\n" );
 		*numFunctions = 10;
 
 		FRENamedFunction* func = (FRENamedFunction*) malloc(sizeof(FRENamedFunction) * (*numFunctions));
@@ -252,21 +263,23 @@ extern "C" {
 		g_AIRKinectAdapter.reset();
 		g_AIRKinectAdapter.context = ctx;
 		
-		
 		*functions = func;
 	}
 
 	void contextFinalizer(FREContext ctx) {
+		//OutputDebugString( "contextFinalizer\n" );
 		g_AIRKinectAdapter.dispose();
 		return;
 	}
 
 	void initializer(void** extData, FREContextInitializer* ctxInitializer, FREContextFinalizer* ctxFinalizer) {
+		//OutputDebugString( "initializer\n" );
 		*ctxInitializer = &contextInitializer;
 		*ctxFinalizer = &contextFinalizer;
 	}
 
 	void finalizer(void* extData) {
+		//OutputDebugString( "finalizer\n" );
 		return;
 	}
 
