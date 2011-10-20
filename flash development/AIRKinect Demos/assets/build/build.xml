@@ -53,14 +53,6 @@
 		</delete>
 	</target>
 
-	<target name="Kill ADL Processes">
-		<exec executable="taskkill.exe">
-			<arg value="/F"/>
-			<arg value="/IM"/>
-			<arg value="adl.exe"/>
-		</exec>
-	</target>
-
 	<target name="Create BIN" unless="AIRKinectDemos.bin.present">
 		<mkdir dir="${AIRKinectDemos.BIN_ROOT}"/>
 	</target>
@@ -93,7 +85,7 @@
 		<unzip src="${AIRKinectDemos.EXTENSION_PATH}\${AIRKinectDemos.EXTENSION_NAME}.ane" dest="${AIRKinectDemos.EXTENSION_UNZIPPED_ROOT}\${AIRKinectDemos.EXTENSION_NAME}.ane"/>
 	</target>
 
-	<target name="Debug Launch" depends="Kill ADL Processes, Extract Native Extension">
+	<target name="Debug Launch" depends="Extract Native Extension">
 		<exec executable="${Flex.ADL}" spawn="true">
 			<arg value="${AIRKinectDemos.APPLICATION_DESCRIPTOR}"/>
 			<arg value="-extdir"/>
@@ -102,7 +94,7 @@
 		</exec>
 	</target>
 
-	<target name="No Debug Launch" depends="Kill ADL Processes, Extract Native Extension">
+	<target name="No Debug Launch" depends="Extract Native Extension">
 		<exec executable="${Flex.ADL}" spawn="true">
 			<arg value="${AIRKinectDemos.APPLICATION_DESCRIPTOR}"/>
 			<arg value="-nodebug"/>

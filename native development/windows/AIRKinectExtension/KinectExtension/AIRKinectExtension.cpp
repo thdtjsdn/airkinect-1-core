@@ -16,7 +16,12 @@ extern "C" {
 
 	FREObject AIRKINECT_startKinect(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) {
 		//OutputDebugString( "AIRKINECT_startKinect\n" );
-		HRESULT hr = g_AIRKinectAdapter.start();
+
+		FREObject fdwFlags = argv[0];
+		uint32_t dwFlags;
+		FREGetObjectAsUint32(fdwFlags, &dwFlags);
+
+		HRESULT hr = g_AIRKinectAdapter.start(dwFlags);
 
 		bool success = !FAILED(hr);
 		FREObject retObj;

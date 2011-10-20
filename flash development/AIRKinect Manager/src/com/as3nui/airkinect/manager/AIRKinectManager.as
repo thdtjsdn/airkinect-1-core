@@ -5,13 +5,15 @@
  * Time: 3:50 PM
  */
 package com.as3nui.airkinect.manager {
+	import com.as3nui.airkinect.manager.skeleton.Skeleton;
 	import com.as3nui.nativeExtensions.kinect.AIRKinect;
 	import com.as3nui.nativeExtensions.kinect.AIRKinectCameraConstants;
-	import com.as3nui.nativeExtensions.kinect.data.NUITransformSmoothParameters;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
-	import com.as3nui.airkinect.manager.skeleton.Skeleton;
+	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
+	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
 
+	import flash.display.BitmapData;
 	import flash.geom.PerspectiveProjection;
 	import flash.utils.Dictionary;
 
@@ -19,6 +21,7 @@ package com.as3nui.airkinect.manager {
 
 	public class AIRKinectManager {
 		private static var _instance:AIRKinectManager;
+		private static const DEFAULT_FLAGS:uint = 11;
 
 		private static function get instance():AIRKinectManager {
 			if (_instance) return _instance;
@@ -26,13 +29,18 @@ package com.as3nui.airkinect.manager {
 			return _instance;
 		}
 
+		public static function initialize(flags:uint = DEFAULT_FLAGS):void {
+			instance.initialize(flags);
+		}
+
+		public static function shutdown():void {
+			instance.shutdown();
+		}
+
 		public static function dispose():void {
 			instance.dispose();
 		}
 
-		//----------------------------------
-		// Kinect Manager Functions
-		//----------------------------------
 		public static function get onSkeletonUpdate():Signal {
 			return instance.onSkeletonUpdate;
 		}
@@ -55,82 +63,62 @@ package com.as3nui.airkinect.manager {
 
 		public static function matchPerspectiveProjection(perspectiveProjection:PerspectiveProjection):void {
 			perspectiveProjection.focalLength = AIRKinectCameraConstants.NUI_CAMERA_DEPTH_NOMINAL_FOCAL_LENGTH_IN_PIXELS * 10;
-			//perspectiveProjection.fieldOfView = KinectCameraConstants.NUI_CAMERA_DEPTH_NOMINAL_DIAGONAL_FOV;
-		}
-
-		//----------------------------------
-		// KINECT Extension Functions
-		//----------------------------------
-		public static function setKinectAngle(angle:int):void {
-			instance.setKinectAngle(angle);
-		}
-
-		public static function getKinectAngle():int {
-			return instance.getKinectAngle();
-		}
-
-		public static function setTransformSmoothingParameters(nuiTransformSmoothingParameters:NUITransformSmoothParameters):Boolean {
-			return instance.setTransformSmoothingParameters(nuiTransformSmoothingParameters);
-		}
-
-		public static function getTransformSmoothingParameters():NUITransformSmoothParameters {
-			return instance.getTransformSmoothingParameters();
-		}
-
-		public static function get onSkeletonFrame():Signal {
-			return instance.onSkeletonFrame;
-		}
-
-		public static function get onRGBFrame():Signal {
-			return instance.onRGBFrame;
-		}
-
-		public static function get onDepthFrame():Signal {
-			return instance.onDepthFrame;
 		}
 
 		//----------------------------------
 		// Start Instance
 		//----------------------------------
-
-		protected var _kinectExtension:AIRKinect;
-
 		protected var _skeletonLookup:Dictionary;
+
 		protected var _onSkeletonUpdate:Signal;
 		protected var _onSkeletonAdded:Signal;
 		protected var _onSkeletonRemoved:Signal;
 
-		public function AIRKinectManager() {
-			_kinectExtension = new AIRKinect();
-			_skeletonLookup = new Dictionary();
-			_onSkeletonAdded = new Signal(Skeleton);
-			_onSkeletonUpdate = new Signal(Skeleton);
-			_onSkeletonRemoved = new Signal(Skeleton);
+		protected var _onRGBFrameUpdate:Signal;
+		protected var _onDepthFrameUpdate:Signal;
 
-			_kinectExtension.onSkeletonFrame.add(onKinectSkeletonFrame);
+		public function AIRKinectManager() {
+			_skeletonLookup 		= new Dictionary();
+			_onSkeletonAdded 		= new Signal(Skeleton);
+			_onSkeletonUpdate 		= new Signal(Skeleton);
+			_onSkeletonRemoved 		= new Signal(Skeleton);
+			_onRGBFrameUpdate 		= new Signal(BitmapData);
+			_onDepthFrameUpdate		= new Signal(BitmapData);
+		}
+
+		public function initialize(flags:uint = DEFAULT_FLAGS):void {
+			AIRKinect.initialize(flags);
+			AIRKinect.addEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
+			AIRKinect.addEventListener(CameraFrameEvent.RGB, onRGBFrame);
+			AIRKinect.addEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
 		}
 
 		/**
 		 * Dispose Memory used by Kinect Manager and Kinect Extension
 		 */
-		public function dispose():void {
-			if(_kinectExtension) {
-				_kinectExtension.onSkeletonFrame.remove(onKinectSkeletonFrame);
-				_kinectExtension.dispose();
-				_kinectExtension = null;
-			}
-
+		public function shutdown():void {
+			AIRKinect.removeEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
+			AIRKinect.removeEventListener(CameraFrameEvent.RGB, onRGBFrame);
+			AIRKinect.removeEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
+			AIRKinect.shutdown();
 			_skeletonLookup = null;
+		}
+
+		public function dispose():void {
 			_onSkeletonAdded.removeAll();
 			_onSkeletonUpdate.removeAll();
 			_onSkeletonRemoved.removeAll();
+			_onRGBFrameUpdate.removeAll();
+			_onDepthFrameUpdate.removeAll();
+			shutdown();
 		}
 
-		/**
-		 * Process Skeleton Frames into Single Skeletons updates
-		 * @param skeletonFrame
-		 */
-		protected function onKinectSkeletonFrame(skeletonFrame:SkeletonFrame):void {
+		//----------------------------------
+		// Skeleton Frame
+		//----------------------------------
+
+		protected function onSkeletonFrame(e:SkeletonFrameEvent):void {
+			var skeletonFrame:SkeletonFrame = e.skeletonFrame;
 			var skeletonPosition:SkeletonPosition;
 			var skeleton:Skeleton;
 			var trackedSkeletonIDs:Vector.<uint> = new Vector.<uint>();
@@ -185,6 +173,20 @@ package com.as3nui.airkinect.manager {
 		}
 
 		//----------------------------------
+		// RGB Frame
+		//----------------------------------
+		private function onRGBFrame(event:CameraFrameEvent):void {
+			_onRGBFrameUpdate.dispatch(event.frame);
+		}
+
+		//----------------------------------
+		// Depth Frame
+		//----------------------------------
+		private function onDepthFrame(event:CameraFrameEvent):void {
+			_onDepthFrameUpdate.dispatch(event.frame);
+		}
+
+		//----------------------------------
 		// Kinect Manager Signals
 		//----------------------------------
 
@@ -200,35 +202,12 @@ package com.as3nui.airkinect.manager {
 			return _onSkeletonUpdate;
 		}
 
-		//----------------------------------
-		// Kinect Extension Composite Functions
-		//----------------------------------
-		public function setKinectAngle(angle:int):void {
-			_kinectExtension.setKinectAngle(angle);
+		public function get onRGBFrameUpdate():Signal {
+			return _onRGBFrameUpdate;
 		}
 
-		public function getKinectAngle():int {
-			return _kinectExtension.getKinectAngle();
-		}
-
-		public function setTransformSmoothingParameters(nuiTransformSmoothingParameters:NUITransformSmoothParameters):Boolean {
-			return _kinectExtension.setTransformSmoothingParameters(nuiTransformSmoothingParameters);
-		}
-
-		public function getTransformSmoothingParameters():NUITransformSmoothParameters {
-			return _kinectExtension.getTransformSmoothingParameters();
-		}
-
-		public function get onSkeletonFrame():Signal {
-			return _kinectExtension.onSkeletonFrame;
-		}
-
-		public function get onRGBFrame():Signal {
-			return _kinectExtension.onRGBFrame;
-		}
-
-		public function get onDepthFrame():Signal {
-			return _kinectExtension.onDepthFrame;
+		public function get onDepthFrameUpdate():Signal {
+			return _onDepthFrameUpdate;
 		}
 	}
 }

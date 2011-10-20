@@ -8,26 +8,28 @@ package com.as3nui.airkinect.demos {
 	import com.as3nui.nativeExtensions.kinect.AIRKinect;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
+	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
+	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
 
+	import flash.desktop.NativeApplication;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
+	import flash.events.KeyboardEvent;
 	import flash.geom.Point;
-	import flash.geom.Rectangle;
 	import flash.geom.Vector3D;
-	import flash.utils.ByteArray;
-	import flash.utils.Endian;
+	import flash.ui.Keyboard;
 
 	public class AirKinectDemos extends Sprite {
+		public static const KinectMaxDepthInFlash:uint = 200;
 
-		private var _airKinect:AIRKinect;
+		private var _flags:uint;
 		private var _currentSkeletons:Vector.<SkeletonPosition>;
 
 		private var _skeletonsSprite:Sprite;
-		private var _kinectMaxDepthInFlash:uint = 200;
 
 		private var _rgbImage:Bitmap;
 		private var _depthImage:Bitmap;
@@ -52,39 +54,66 @@ package com.as3nui.airkinect.demos {
 		}
 
 		private function initDemo():void {
-			_skeletonsSprite = new Sprite();
-			this.addChild(_skeletonsSprite);
+			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON;
+			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR;
+			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX;
+			_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX;
+			AIRKinect.initialize(_flags);
 
-			_rgbImage = new Bitmap(new BitmapData(640, 480, true, 0xffff0000));
-			_rgbImage.scaleX = _rgbImage.scaleY = .5;
-			this.addChild(_rgbImage);
+			if (AIRKinect.rgbEnabled) {
+				_rgbImage = new Bitmap(new BitmapData(640, 480, true, 0xffff0000));
+				_rgbImage.scaleX = _rgbImage.scaleY = .5;
+				this.addChild(_rgbImage);
+				AIRKinect.addEventListener(CameraFrameEvent.RGB, onRGBFrame);
+			}
 
-			_depthImage = new Bitmap(new BitmapData(320, 240, true, 0xffff0000));
-			this.addChild(_depthImage);
+			if (AIRKinect.depthEnabled) {
+				_depthImage = new Bitmap(new BitmapData(320, 240, true, 0xffff0000));
+				this.addChild(_depthImage);
+				AIRKinect.addEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
+			}
 
-			_airKinect = new AIRKinect();
-			_airKinect.onSkeletonFrame.add(onSkeletonFrame);
+			if (AIRKinect.skeletonEnabled) {
+				_skeletonsSprite = new Sprite();
+				this.addChild(_skeletonsSprite);
+				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+				AIRKinect.addEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
+			}
 
-			_airKinect.onRGBFrame.add(onRGBFrame);
-			_airKinect.onDepthFrame.add(onDepthFrame);
-
-			this.addEventListener(Event.ENTER_FRAME, onEnterFrame)
+			//Listeners
+			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
+			NativeApplication.nativeApplication.addEventListener(Event.EXITING, onExiting);
 		}
 
-		private function onRGBFrame(byteArray:ByteArray):void {
-			byteArray.position = 0;
-			byteArray.endian = Endian.LITTLE_ENDIAN;
-			_rgbImage.bitmapData.setPixels(new Rectangle(0, 0, 640, 480), byteArray);
+		private function onKeyUp(event:KeyboardEvent):void {
+			switch (event.keyCode) {
+				case Keyboard.S:
+					if (!AIRKinect.KINECT_RUNNING) AIRKinect.initialize(_flags);
+					break;
+				case Keyboard.X:
+					if (AIRKinect.rgbEnabled) _rgbImage.bitmapData.dispose();
+					if (AIRKinect.depthEnabled) _depthImage.bitmapData.dispose();
+					if (AIRKinect.skeletonEnabled) while (_skeletonsSprite.numChildren > 0) _skeletonsSprite.removeChildAt(0);
+					AIRKinect.shutdown();
+					break;
+			}
 		}
 
-		private function onDepthFrame(byteArray:ByteArray):void {
-			byteArray.position = 0;
-			byteArray.endian = Endian.LITTLE_ENDIAN;
-			_depthImage.bitmapData.setPixels(new Rectangle(0, 0, 320, 240), byteArray);
+		private function onExiting(event:Event):void {
+			AIRKinect.shutdown();
 		}
 
-		private function onSkeletonFrame(skeletonFrame:SkeletonFrame):void {
+		private function onRGBFrame(e:CameraFrameEvent):void {
+			_rgbImage.bitmapData = e.frame.clone();
+		}
+
+		private function onDepthFrame(e:CameraFrameEvent):void {
+			_depthImage.bitmapData = e.frame.clone();
+		}
+
+		private function onSkeletonFrame(e:SkeletonFrameEvent):void {
 			_currentSkeletons = new <SkeletonPosition>[];
+			var skeletonFrame:SkeletonFrame = e.skeletonFrame;
 
 			if (skeletonFrame.numSkeletons > 0) {
 				for (var j:uint = 0; j < skeletonFrame.numSkeletons; j++) {
@@ -99,9 +128,10 @@ package com.as3nui.airkinect.demos {
 
 		private function drawSkeletons():void {
 			while (_skeletonsSprite.numChildren > 0) _skeletonsSprite.removeChildAt(0);
+			if (!AIRKinect.skeletonEnabled) return;
 
 			var element:Vector3D;
-			var scaler:Vector3D = new Vector3D(stage.stageWidth, stage.stageHeight, _kinectMaxDepthInFlash);
+			var scaler:Vector3D = new Vector3D(stage.stageWidth, stage.stageHeight, KinectMaxDepthInFlash);
 			var elementSprite:Sprite;
 
 			var color:uint;
@@ -110,7 +140,7 @@ package com.as3nui.airkinect.demos {
 					element = skeleton.getElementScaled(i, scaler);
 
 					elementSprite = new Sprite();
-					color = (element.z / (_kinectMaxDepthInFlash * 4)) * 255 << 16 | (1 - (element.z / (_kinectMaxDepthInFlash * 4))) * 255 << 8 | 0;
+					color = (element.z / (KinectMaxDepthInFlash * 4)) * 255 << 16 | (1 - (element.z / (KinectMaxDepthInFlash * 4))) * 255 << 8 | 0;
 					elementSprite.graphics.beginFill(color);
 					elementSprite.graphics.drawCircle(0, 0, 15);
 					elementSprite.x = element.x;

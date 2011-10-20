@@ -9,7 +9,7 @@ public:
 //------------------------------------------------------------------
 	void								reset();
 	bool								isAvailable();
-	HRESULT								start();
+	HRESULT								start(uint32_t dwFlags);
 	void								dispose();
 	void								onDepthFrame();
 	void								onRGBFrame();

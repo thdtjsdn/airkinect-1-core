@@ -14,6 +14,8 @@ package com.as3nui.airkinect.manager.demos {
 	import com.as3nui.airkinect.manager.regions.TrackedRegion;
 	import com.as3nui.airkinect.manager.skeleton.Skeleton;
 
+	import flash.desktop.NativeApplication;
+
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
@@ -52,9 +54,16 @@ package com.as3nui.airkinect.manager.demos {
 			_trackedRegionSprite = new Sprite();
 			this.addChild(_trackedRegionSprite);
 
+			AIRKinectManager.initialize();
 			AIRKinectManager.onSkeletonAdded.add(onSkeletonAdded);
 			AIRKinectManager.onSkeletonRemoved.add(onSkeletonRemoved);
-			this.addEventListener(Event.ENTER_FRAME, onEnterFrame)
+			this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+
+			NativeApplication.nativeApplication.addEventListener(Event.EXITING, onExiting);
+		}
+
+		private function onExiting(event:Event):void {
+			AIRKinectManager.dispose();
 		}
 
 		private function onEnterFrame(event:Event):void {

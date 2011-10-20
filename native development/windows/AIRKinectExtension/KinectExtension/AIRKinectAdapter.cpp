@@ -40,26 +40,31 @@ bool AIRKinectAdapter::isAvailable() {
 	return !FAILED(hr);
 }
 
-HRESULT AIRKinectAdapter::start() {
+HRESULT AIRKinectAdapter::start(uint32_t dwFlags) {
 	//OutputDebugString( "AIRKinect Adapter :: Start\n" );
 	HRESULT                hr;
 
-    m_hNextDepthFrameEvent	= CreateEvent( NULL, TRUE, FALSE, NULL );
-    m_hNextRGBFrameEvent	= CreateEvent( NULL, TRUE, FALSE, NULL );
-    m_hNextSkeletonEvent	= CreateEvent( NULL, TRUE, FALSE, NULL );
-  
-	hr = NuiInitialize(NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX | NUI_INITIALIZE_FLAG_USES_SKELETON | NUI_INITIALIZE_FLAG_USES_COLOR);
-	
+	hr = NuiInitialize(dwFlags);	
     if (FAILED(hr)) return hr;
 
-    hr = NuiSkeletonTrackingEnable( m_hNextSkeletonEvent, 0 );
-    if (FAILED(hr)) return hr;
+	m_hNextSkeletonEvent	= CreateEvent( NULL, TRUE, FALSE, NULL );
+	m_hNextRGBFrameEvent	= CreateEvent( NULL, TRUE, FALSE, NULL );
+	m_hNextDepthFrameEvent	= CreateEvent( NULL, TRUE, FALSE, NULL );
 
-	hr = NuiImageStreamOpen( NUI_IMAGE_TYPE_COLOR, NUI_IMAGE_RESOLUTION_640x480, 0, 2, m_hNextRGBFrameEvent, &m_pRGBStreamHandle );
-    if (FAILED(hr)) return hr;
+	if(dwFlags & NUI_INITIALIZE_FLAG_USES_SKELETON) {
+		hr = NuiSkeletonTrackingEnable( m_hNextSkeletonEvent, 0 );
+		if (FAILED(hr)) return hr;
+	}
 
-    hr = NuiImageStreamOpen(NUI_IMAGE_TYPE_DEPTH_AND_PLAYER_INDEX, NUI_IMAGE_RESOLUTION_320x240, 0, 2, m_hNextDepthFrameEvent, &m_pDepthStreamHandle );
-    if (FAILED(hr)) return hr;
+	if(dwFlags & NUI_INITIALIZE_FLAG_USES_COLOR) {
+		hr = NuiImageStreamOpen( NUI_IMAGE_TYPE_COLOR, NUI_IMAGE_RESOLUTION_640x480, 0, 2, m_hNextRGBFrameEvent, &m_pRGBStreamHandle );
+		if (FAILED(hr)) return hr;
+	}
+
+	if(dwFlags & NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX){
+		hr = NuiImageStreamOpen(NUI_IMAGE_TYPE_DEPTH_AND_PLAYER_INDEX, NUI_IMAGE_RESOLUTION_320x240, 0, 2, m_hNextDepthFrameEvent, &m_pDepthStreamHandle );
+		if (FAILED(hr)) return hr;
+	}
 
     m_hEvNuiProcessStop=CreateEvent(NULL, FALSE, FALSE, NULL);
     m_hThNuiProcess=CreateThread(NULL, 0, processThread, this, 0, NULL);
