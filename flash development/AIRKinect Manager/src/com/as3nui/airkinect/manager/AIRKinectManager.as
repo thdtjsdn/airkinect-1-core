@@ -57,6 +57,15 @@ package com.as3nui.airkinect.manager {
 			return instance.getNextSkeleton();
 		}
 
+		public static function get onRGBFrameUpdate():Signal {
+			return instance.onRGBFrameUpdate;
+		}
+
+		public static function get onDepthFrameUpdate():Signal {
+			return instance.onDepthFrameUpdate;
+		}
+
+
 		public static function numSkeletons():uint {
 			return instance.numSkeletons();
 		}
