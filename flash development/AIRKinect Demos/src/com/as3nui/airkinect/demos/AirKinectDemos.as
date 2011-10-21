@@ -104,11 +104,11 @@ package com.as3nui.airkinect.demos {
 		}
 
 		private function onRGBFrame(e:CameraFrameEvent):void {
-			_rgbImage.bitmapData = e.frame.clone();
+			_rgbImage.bitmapData = e.frame;
 		}
 
 		private function onDepthFrame(e:CameraFrameEvent):void {
-			_depthImage.bitmapData = e.frame.clone();
+			_depthImage.bitmapData = e.frame;
 		}
 
 		private function onSkeletonFrame(e:SkeletonFrameEvent):void {

@@ -65,6 +65,13 @@ package com.as3nui.airkinect.manager {
 			return instance.onDepthFrameUpdate;
 		}
 
+		public static function setKinectAngle(angle:int):void {
+			instance.setKinectAngle(angle);
+		}
+
+		public static function getKinectAngle():int {
+			return instance.getKinectAngle();
+		}		
 
 		public static function numSkeletons():uint {
 			return instance.numSkeletons();
@@ -193,6 +200,17 @@ package com.as3nui.airkinect.manager {
 		//----------------------------------
 		private function onDepthFrame(event:CameraFrameEvent):void {
 			_onDepthFrameUpdate.dispatch(event.frame);
+		}
+
+		//----------------------------------
+		// Kinect Angle
+		//----------------------------------
+		public function setKinectAngle(angle:int):void {
+			AIRKinect.setKinectAngle(angle);
+		}
+
+		public function getKinectAngle():int {
+			return AIRKinect.getKinectAngle();
 		}
 
 		//----------------------------------

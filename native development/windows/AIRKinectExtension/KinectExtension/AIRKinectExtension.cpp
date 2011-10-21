@@ -7,6 +7,16 @@
 extern "C" {
 	AIRKinectAdapter	g_AIRKinectAdapter;
 	NUI_TRANSFORM_SMOOTH_PARAMETERS _transformSmoothingParameters;
+	int32_t m_rgbBa[640*480];
+	DWORD rgbWidth = 640;
+	DWORD rgbHeight = 480;
+	int rgbBytes = 1228800;
+
+	DWORD depthWidth = 320;
+	DWORD depthHeight = 240;
+	int depthBytes = 307200;
+	int32_t m_depthBa[320*240];
+
 
 	FREObject AIRKINECT_init(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) {
 		//OutputDebugString( "AIRKinect :: init\n" );
@@ -152,18 +162,13 @@ extern "C" {
 
 	FREObject AIRKINECT_getRGBFrame(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
 		//OutputDebugString( "AIRKINECT_getRGBFrame\n" );
+		
 		BYTE * pBuffer = g_AIRKinectAdapter.RGBFrameBuffer;
-
-		DWORD width = 640;
-		DWORD height = 480;
-		int bytes = width * height * 4;
-			
-		int32_t m_rgbWk[640*480];
-		int32_t *rgbrun = m_rgbWk;
+		int32_t *rgbrun = m_rgbBa;
 		int32_t * pBufferRun = (int32_t*) pBuffer;
 
-		for( uint32_t x = 0 ; x < width ; x++ ) {
-			for( uint32_t y = 0 ; y < height ; y++ ) {
+		for( uint32_t x = 0 ; x < rgbWidth ; x++ ) {
+			for( uint32_t y = 0 ; y < rgbHeight ; y++ ) {
 				* rgbrun = 0xff << 24 | *pBufferRun;
 				pBufferRun++;
 				rgbrun++;
@@ -174,10 +179,10 @@ extern "C" {
 
 		FREByteArray byteArray;			
 		FREObject length;
-		FRENewObjectFromUint32(bytes, &length);
+		FRENewObjectFromUint32(rgbBytes, &length);
 		FRESetObjectProperty(objectByteArray, (const uint8_t*) "length", length, NULL);
 		FREAcquireByteArray(objectByteArray, &byteArray);
-		memcpy(byteArray.bytes, m_rgbWk, bytes);
+		memcpy(byteArray.bytes, m_rgbBa, rgbBytes);
 		FREReleaseByteArray(objectByteArray);
 
 		return NULL;
@@ -186,18 +191,12 @@ extern "C" {
 	FREObject AIRKINECT_getDepthFrame(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
 		//OutputDebugString( "AIRKINECT_getDepthFrame\n" );
 		BYTE * pBuffer = g_AIRKinectAdapter.depthFrameBuffer;
-		
-		DWORD width = 320;
-		DWORD height = 240;
-
-		int bytes = width * height * 4;
-		int32_t m_rgbWk[320*240];
-		int32_t * rgbrun = m_rgbWk;
+		int32_t * rgbrun = m_depthBa;
 		USHORT * pBufferRun = (USHORT*) pBuffer;
 			
 		int32_t value;
-		for( uint32_t y = 0 ; y < height ; y++ ) {
-			for( uint32_t x = 0 ; x < width ; x++ ) {
+		for( uint32_t x = 0 ; x < depthWidth ; x++ ) {
+			for( uint32_t y = 0 ; y < depthHeight ; y++ ) {
 				RGBQUAD quad = Nui_ShortToQuad_Depth( *pBufferRun );
 				value = quad.rgbReserved << 24 | quad.rgbRed <<16 | quad.rgbGreen << 8| quad.rgbBlue;
 				* rgbrun = 0xff << 24 | value;
@@ -209,10 +208,10 @@ extern "C" {
 		FREObject objectByteArray = argv[0];
 		FREByteArray byteArray;			
 		FREObject length;
-		FRENewObjectFromUint32(bytes, &length);
+		FRENewObjectFromUint32(depthBytes, &length);
 		FRESetObjectProperty(objectByteArray, (const uint8_t*) "length", length, NULL);
 		FREAcquireByteArray(objectByteArray, &byteArray);
-		memcpy(byteArray.bytes, m_rgbWk, bytes);
+		memcpy(byteArray.bytes, m_depthBa, depthBytes);
 		FREReleaseByteArray(objectByteArray);
 
 		return NULL;

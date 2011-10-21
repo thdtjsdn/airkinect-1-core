@@ -236,14 +236,14 @@ package com.as3nui.nativeExtensions.kinect {
 					_rgbFrame.position = 0;
 					_rgbFrame.endian = Endian.LITTLE_ENDIAN;
 					_rgbImage.setPixels(new Rectangle(0, 0, 640, 480), _rgbFrame);
-					this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.RGB, _rgbImage));
+					this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.RGB, _rgbImage.clone()));
 					break;
 				case DEPTH_FRAME:
 					_extCtx.call('getDepthFrame', _depthFrame);
 					_depthFrame.position = 0;
 					_depthFrame.endian = Endian.LITTLE_ENDIAN;
 					_depthImage.setPixels(new Rectangle(0, 0, 320, 240), _depthFrame);
-					this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage));
+					this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage.clone()));
 					break;
 			}
 		}
