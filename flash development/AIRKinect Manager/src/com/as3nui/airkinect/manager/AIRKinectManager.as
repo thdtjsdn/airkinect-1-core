@@ -126,6 +126,13 @@ package com.as3nui.airkinect.manager {
 			_onSkeletonRemoved.removeAll();
 			_onRGBFrameUpdate.removeAll();
 			_onDepthFrameUpdate.removeAll();
+
+			var skeletonIndex:String;
+			for (skeletonIndex in _skeletonLookup) {
+				if (_skeletonLookup[skeletonIndex] is Skeleton) {
+					(_skeletonLookup[skeletonIndex] as Skeleton).dispose();
+				}
+			}
 			shutdown();
 		}
 
@@ -162,15 +169,16 @@ package com.as3nui.airkinect.manager {
 					_skeletonLookup[skeletonRemoveIndex] = null;
 					delete _skeletonLookup[skeletonRemoveIndex];
 					_onSkeletonRemoved.dispatch(skeleton);
+					skeleton.dispose();
 				}
 			}
 		}
 
 		public function getNextSkeleton():Skeleton {
-			var skeletonRemoveIndex:String;
-			for (skeletonRemoveIndex in _skeletonLookup) {
-				if (_skeletonLookup[skeletonRemoveIndex] is Skeleton) {
-					return _skeletonLookup[skeletonRemoveIndex] as Skeleton;
+			var skeletonIndex:String;
+			for (skeletonIndex in _skeletonLookup) {
+				if (_skeletonLookup[skeletonIndex] is Skeleton) {
+					return _skeletonLookup[skeletonIndex] as Skeleton;
 				}
 			}
 			return null;
@@ -178,9 +186,9 @@ package com.as3nui.airkinect.manager {
 
 		public function numSkeletons():uint {
 			var count:uint = 0;
-			var skeletonRemoveIndex:String;
-			for (skeletonRemoveIndex in _skeletonLookup) {
-				if (_skeletonLookup[skeletonRemoveIndex] is Skeleton) {
+			var skeletonIndex:String;
+			for (skeletonIndex in _skeletonLookup) {
+				if (_skeletonLookup[skeletonIndex] is Skeleton) {
 					count++;
 				}
 			}
@@ -192,14 +200,16 @@ package com.as3nui.airkinect.manager {
 		// RGB Frame
 		//----------------------------------
 		private function onRGBFrame(event:CameraFrameEvent):void {
-			_onRGBFrameUpdate.dispatch(event.frame);
+			_onRGBFrameUpdate.dispatch(event.frame.clone());
+			event.frame.dispose();
 		}
 
 		//----------------------------------
 		// Depth Frame
 		//----------------------------------
 		private function onDepthFrame(event:CameraFrameEvent):void {
-			_onDepthFrameUpdate.dispatch(event.frame);
+			_onDepthFrameUpdate.dispatch(event.frame.clone());
+			event.frame.dispose();
 		}
 
 		//----------------------------------

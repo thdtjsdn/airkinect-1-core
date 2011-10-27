@@ -228,22 +228,36 @@ package com.as3nui.nativeExtensions.kinect {
 		protected function onStatus(event:StatusEvent):void {
 			switch (event.code) {
 				case SKELETON_FRAME:
-					var currentSkeleton:SkeletonFrame = _extCtx.call('getSkeletonFrameData') as SkeletonFrame;
-					this.dispatchEvent(new SkeletonFrameEvent(currentSkeleton));
+					try{
+						var currentSkeleton:SkeletonFrame = _extCtx.call('getSkeletonFrameData') as SkeletonFrame;
+						this.dispatchEvent(new SkeletonFrameEvent(currentSkeleton));
+					}catch(e:Error){
+						trace("RGB Error :: " + e.message);
+					}
 					break;
 				case RGB_FRAME:
-					_extCtx.call('getRGBFrame', _rgbFrame);
-					_rgbFrame.position = 0;
-					_rgbFrame.endian = Endian.LITTLE_ENDIAN;
-					_rgbImage.setPixels(new Rectangle(0, 0, 640, 480), _rgbFrame);
-					this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.RGB, _rgbImage.clone()));
+					try{
+						_extCtx.call('getRGBFrame', _rgbFrame);
+						_rgbFrame.position = 0;
+						_rgbFrame.endian = Endian.LITTLE_ENDIAN;
+						_rgbImage.setPixels(new Rectangle(0, 0, 640, 480), _rgbFrame);
+						this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.RGB, _rgbImage.clone()));
+						_rgbImage.dispose();
+					}catch(e:Error){
+						trace("RGB Image Error :: " + e.message);
+					}
 					break;
 				case DEPTH_FRAME:
-					_extCtx.call('getDepthFrame', _depthFrame);
-					_depthFrame.position = 0;
-					_depthFrame.endian = Endian.LITTLE_ENDIAN;
-					_depthImage.setPixels(new Rectangle(0, 0, 320, 240), _depthFrame);
-					this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage.clone()));
+					try{
+						_extCtx.call('getDepthFrame', _depthFrame);
+						_depthFrame.position = 0;
+						_depthFrame.endian = Endian.LITTLE_ENDIAN;
+						_depthImage.setPixels(new Rectangle(0, 0, 320, 240), _depthFrame);
+						this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage.clone()));
+						_depthImage.dispose();
+					}catch(e:Error){
+						trace("Depth Image Error :: " + e.message);
+					}
 					break;
 			}
 		}

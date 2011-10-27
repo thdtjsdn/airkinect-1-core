@@ -23,6 +23,11 @@ package com.as3nui.airkinect.manager.skeleton {
 			if (skeletonPosition) update(skeletonPosition)
 		}
 
+		public function dispose():void {
+			_skeletonPositionsHistory = null;
+			_currentSkeletonData = null;
+		}
+
 		public function update(skeletonPosition:SkeletonPosition):void {
 			_currentSkeletonData = skeletonPosition;
 			_skeletonPositionsHistory.unshift(skeletonPosition);
@@ -123,5 +128,6 @@ package com.as3nui.airkinect.manager.skeleton {
 		public function get elements():Vector.<Vector3D> {
 			return currentSkeleton.elements;
 		}
+
 	}
 }
