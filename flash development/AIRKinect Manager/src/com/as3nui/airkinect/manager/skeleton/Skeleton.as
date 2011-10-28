@@ -25,7 +25,6 @@ package com.as3nui.airkinect.manager.skeleton {
 
 		public function dispose():void {
 			_skeletonPositionsHistory = null;
-			_currentSkeletonData = null;
 		}
 
 		public function update(skeletonPosition:SkeletonPosition):void {
@@ -62,6 +61,7 @@ package com.as3nui.airkinect.manager.skeleton {
 			if(elementIDs.length != steps.length) throw new Error("Elements and Steps vectors must be of same length");
 
 			var elementLookup:Dictionary = new Dictionary();
+			if(_skeletonPositionsHistory == null) return elementLookup;
 			var elementIndex:uint;
 
 			var elementID:uint;
