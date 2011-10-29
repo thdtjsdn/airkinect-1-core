@@ -18,6 +18,7 @@ public:
 	HRESULT								cameraElevationSetAngle(LONG value);
 	void								setTransformSmoothingParameters(NUI_TRANSFORM_SMOOTH_PARAMETERS smoothingParameters);
 	void								setDefaultSmoothingParameters();
+	void								onConnectionError();
 
 	FREContext							context;
 
@@ -29,6 +30,7 @@ private:
 	static DWORD WINAPI					processThread(LPVOID pParam);
 
 	NUI_TRANSFORM_SMOOTH_PARAMETERS		m_transformSmoothingParameters;
+	uint32_t							m_brokenFrames;
 
 	HANDLE								m_hThNuiProcess;
     HANDLE								m_hEvNuiProcessStop;

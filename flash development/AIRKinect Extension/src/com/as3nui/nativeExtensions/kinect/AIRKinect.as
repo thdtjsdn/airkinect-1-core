@@ -8,9 +8,11 @@ package com.as3nui.nativeExtensions.kinect {
 	import com.as3nui.nativeExtensions.kinect.data.NUITransformSmoothParameters;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
+	import com.as3nui.nativeExtensions.kinect.events.KinectErrorEvent;
 	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
 
 	import flash.display.BitmapData;
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.StatusEvent;
 	import flash.external.ExtensionContext;
@@ -27,6 +29,7 @@ package com.as3nui.nativeExtensions.kinect {
 		private static const SKELETON_FRAME:String 	= "skeletonFrame";
 		private static const RGB_FRAME:String 		= "RGBFrame";
 		private static const DEPTH_FRAME:String 	= "depthFrame";
+		private static const CONNECTION_ERROR:String = "connectionError";
 		private static const EXTENSION_ID:String 	= 'com.as3nui.extensions.AIRKinect';
 
 		private static var _KINECT_RUNNING:Boolean;
@@ -42,8 +45,8 @@ package com.as3nui.nativeExtensions.kinect {
 			return _instance;
 		}
 
-		public static function initialize(flags:uint = NUI_INITIALIZE_FLAG_USES_SKELETON):void {
-			instance.initialize(flags);
+		public static function initialize(flags:uint = NUI_INITIALIZE_FLAG_USES_SKELETON):Boolean {
+			return instance.initialize(flags);
 		}
 
 		public static function shutdown():void {
@@ -121,33 +124,33 @@ package com.as3nui.nativeExtensions.kinect {
 		private var _flags:ByteArray;
 
 		public function AIRKinect() {
-			_flags = new ByteArray();
 			createContext();
 		}
 
 		public function createContext():void {
 			_extCtx = ExtensionContext.createExtensionContext(EXTENSION_ID, null);
 			if (_extCtx != null) {
+				_extCtx.addEventListener(StatusEvent.STATUS, onStatus);
 				_extCtx.call("init");
 			} else {
 				throw new Error("Error while instantiating Kinect Extension");
 			}
 		}
 
-		public function initialize(kinectFlags:uint = NUI_INITIALIZE_FLAG_USES_SKELETON):void {
+		public function initialize(kinectFlags:uint = NUI_INITIALIZE_FLAG_USES_SKELETON):Boolean {
 			if(_KINECT_RUNNING) throw new Error("Only one instance of the Kinect maybe run at a time");
 
+			_flags = new ByteArray();
 			_flags.writeByte(kinectFlags);
 
 			if(_extCtx == null) createContext();
 			
 			if (!_extCtx.call("kinectStart", kinectFlags)) {
-				throw new Error("Error while Starting Kinect");
-			} else {
-				_KINECT_RUNNING = true;
-				_extCtx.addEventListener(StatusEvent.STATUS, onStatus);
+				shutdown();
+				return false;
 			}
 
+			_KINECT_RUNNING = true;
 			if (rgbEnabled) {
 				_rgbFrame = new ByteArray();
 				_rgbImage = new BitmapData(640, 480, false);
@@ -157,13 +160,17 @@ package com.as3nui.nativeExtensions.kinect {
 				_depthFrame = new ByteArray();
 				_depthImage = new BitmapData(320, 240, false);
 			}
+			return true;
 		}
 
 		public function shutdown():void {
 			_KINECT_RUNNING = false;
+			
 			if(_extCtx) {
 				_extCtx.call("kinectStop");
 				_extCtx.removeEventListener(StatusEvent.STATUS, onStatus);
+				_extCtx.dispose();
+				_extCtx = null;
 			}
 
 			//Clean up RGB Frame and Image
@@ -178,12 +185,6 @@ package com.as3nui.nativeExtensions.kinect {
 			if(_depthImage) {
 				_depthImage.dispose();
 				_depthImage = null;
-			}
-
-
-			if (_extCtx) {
-				_extCtx.dispose();
-				_extCtx = null;
 			}
 		}
 
@@ -232,7 +233,7 @@ package com.as3nui.nativeExtensions.kinect {
 						var currentSkeleton:SkeletonFrame = _extCtx.call('getSkeletonFrameData') as SkeletonFrame;
 						this.dispatchEvent(new SkeletonFrameEvent(currentSkeleton));
 					}catch(e:Error){
-						trace("RGB Error :: " + e.message);
+						trace("Skeleton Frame Error :: " + e.message);
 					}
 					break;
 				case RGB_FRAME:
@@ -242,7 +243,6 @@ package com.as3nui.nativeExtensions.kinect {
 						_rgbFrame.endian = Endian.LITTLE_ENDIAN;
 						_rgbImage.setPixels(new Rectangle(0, 0, 640, 480), _rgbFrame);
 						this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.RGB, _rgbImage.clone()));
-						_rgbImage.dispose();
 					}catch(e:Error){
 						trace("RGB Image Error :: " + e.message);
 					}
@@ -254,10 +254,13 @@ package com.as3nui.nativeExtensions.kinect {
 						_depthFrame.endian = Endian.LITTLE_ENDIAN;
 						_depthImage.setPixels(new Rectangle(0, 0, 320, 240), _depthFrame);
 						this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage.clone()));
-						_depthImage.dispose();
 					}catch(e:Error){
 						trace("Depth Image Error :: " + e.message);
 					}
+					break;
+				case CONNECTION_ERROR:
+					this.shutdown();
+					this.dispatchEvent(new KinectErrorEvent(KinectErrorEvent.CONNECTION_ERROR));
 					break;
 			}
 		}

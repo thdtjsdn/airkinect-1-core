@@ -11,6 +11,7 @@ package com.as3nui.airkinect.manager {
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
+	import com.as3nui.nativeExtensions.kinect.events.KinectErrorEvent;
 	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
 
 	import flash.display.BitmapData;
@@ -29,8 +30,8 @@ package com.as3nui.airkinect.manager {
 			return _instance;
 		}
 
-		public static function initialize(flags:uint = DEFAULT_FLAGS):void {
-			instance.initialize(flags);
+		public static function initialize(flags:uint = DEFAULT_FLAGS):Boolean {
+			return instance.initialize(flags);
 		}
 
 		public static function shutdown():void {
@@ -65,6 +66,10 @@ package com.as3nui.airkinect.manager {
 			return instance.onDepthFrameUpdate;
 		}
 
+		public static function get onConnectionError():Signal {
+			return instance.onConnectionError;
+		}
+
 		public static function setKinectAngle(angle:int):void {
 			instance.setKinectAngle(angle);
 		}
@@ -92,6 +97,7 @@ package com.as3nui.airkinect.manager {
 
 		protected var _onRGBFrameUpdate:Signal;
 		protected var _onDepthFrameUpdate:Signal;
+		protected var _onConnectionError:Signal;
 
 		public function AIRKinectManager() {
 			_skeletonLookup 		= new Dictionary();
@@ -100,13 +106,18 @@ package com.as3nui.airkinect.manager {
 			_onSkeletonRemoved 		= new Signal(Skeleton);
 			_onRGBFrameUpdate 		= new Signal(BitmapData);
 			_onDepthFrameUpdate		= new Signal(BitmapData);
+			_onConnectionError		= new Signal();
 		}
 
-		public function initialize(flags:uint = DEFAULT_FLAGS):void {
-			AIRKinect.initialize(flags);
-			AIRKinect.addEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
-			AIRKinect.addEventListener(CameraFrameEvent.RGB, onRGBFrame);
-			AIRKinect.addEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
+		public function initialize(flags:uint = DEFAULT_FLAGS):Boolean {
+			var success:Boolean = AIRKinect.initialize(flags);
+			if(success) {
+				AIRKinect.addEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
+				AIRKinect.addEventListener(CameraFrameEvent.RGB, onRGBFrame);
+				AIRKinect.addEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
+				AIRKinect.addEventListener(KinectErrorEvent.CONNECTION_ERROR, onKinectConnectionError);
+			}
+			return success;
 		}
 
 		/**
@@ -126,6 +137,7 @@ package com.as3nui.airkinect.manager {
 			_onSkeletonRemoved.removeAll();
 			_onRGBFrameUpdate.removeAll();
 			_onDepthFrameUpdate.removeAll();
+			_onConnectionError.removeAll();
 
 			var skeletonIndex:String;
 			for (skeletonIndex in _skeletonLookup) {
@@ -133,7 +145,7 @@ package com.as3nui.airkinect.manager {
 					(_skeletonLookup[skeletonIndex] as Skeleton).dispose();
 				}
 			}
-			shutdown();
+			this.shutdown();
 		}
 
 		//----------------------------------
@@ -147,6 +159,7 @@ package com.as3nui.airkinect.manager {
 			var trackedSkeletonIDs:Vector.<uint> = new Vector.<uint>();
 
 			if (skeletonFrame.numSkeletons > 0) {
+
 				for (var j:uint = 0; j < skeletonFrame.numSkeletons; j++) {
 					skeletonPosition = skeletonFrame.getSkeletonPosition(j);
 					trackedSkeletonIDs.push(skeletonPosition.trackingID);
@@ -213,6 +226,21 @@ package com.as3nui.airkinect.manager {
 		}
 
 		//----------------------------------
+		// Connection Error
+		//----------------------------------
+		private function onKinectConnectionError(event:KinectErrorEvent):void {
+			var skeletonIndex:String;
+			for (skeletonIndex in _skeletonLookup) {
+				if (_skeletonLookup[skeletonIndex] is Skeleton) {
+					(_skeletonLookup[skeletonIndex] as Skeleton).dispose();
+				}
+			}
+			_onConnectionError.dispatch();
+			_skeletonLookup = new Dictionary();
+			this.dispose();
+		}
+
+		//----------------------------------
 		// Kinect Angle
 		//----------------------------------
 		public function setKinectAngle(angle:int):void {
@@ -245,6 +273,10 @@ package com.as3nui.airkinect.manager {
 
 		public function get onDepthFrameUpdate():Signal {
 			return _onDepthFrameUpdate;
+		}
+
+		public function get onConnectionError():Signal {
+			return _onConnectionError;
 		}
 	}
 }

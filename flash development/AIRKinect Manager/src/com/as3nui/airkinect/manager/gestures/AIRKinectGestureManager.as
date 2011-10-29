@@ -106,10 +106,16 @@ package com.as3nui.airkinect.manager.gestures {
 
 			for each(var gesture:IKinectGesture in this._gestures) {
 				if (skeletonsWithGestures.indexOf(gesture.skeleton) && gesture.priority < executedGesturePriority) break;
-				gesture.update();
-				if (gesture.currentState == GestureState.GESTURE_STARTED || gesture.currentState == GestureState.GESTURE_PROGRESS || (gesture.currentState == GestureState.GESTURE_COMPLETE)) {
-					skeletonsWithGestures.push(gesture.skeleton);
-					executedGesturePriority = gesture.priority;
+
+				//Skeleton was deleted
+				if(gesture.skeleton.currentSkeleton == null){
+					removeAllGestures(gesture.skeleton)
+				}else{
+					gesture.update();
+					if (gesture.currentState == GestureState.GESTURE_STARTED || gesture.currentState == GestureState.GESTURE_PROGRESS || (gesture.currentState == GestureState.GESTURE_COMPLETE)) {
+						skeletonsWithGestures.push(gesture.skeleton);
+						executedGesturePriority = gesture.priority;
+					}
 				}
 			}
 		}

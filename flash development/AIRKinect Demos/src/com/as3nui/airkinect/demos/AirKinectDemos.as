@@ -9,6 +9,7 @@ package com.as3nui.airkinect.demos {
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
+	import com.as3nui.nativeExtensions.kinect.events.KinectErrorEvent;
 	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
 
 	import flash.desktop.NativeApplication;
@@ -19,9 +20,11 @@ package com.as3nui.airkinect.demos {
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
+	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	import flash.ui.Keyboard;
+	import flash.utils.Timer;
 
 	public class AirKinectDemos extends Sprite {
 		public static const KinectMaxDepthInFlash:uint = 200;
@@ -33,8 +36,12 @@ package com.as3nui.airkinect.demos {
 
 		private var _rgbImage:Bitmap;
 		private var _depthImage:Bitmap;
+		private var _retryTimer:Timer;
 
 		public function AirKinectDemos() {
+			_retryTimer = new Timer(5000, 1);
+			_retryTimer.addEventListener(TimerEvent.TIMER, onRetryTimer);
+
 			this.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage)
 		}
 
@@ -58,8 +65,21 @@ package com.as3nui.airkinect.demos {
 			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR;
 			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX;
 			_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX;
-			AIRKinect.initialize(_flags);
+			initKinect();
+		}
 
+		private function initKinect():void {
+			if(!AIRKinect.initialize(_flags)){
+				trace("Kinect Failed");
+				_retryTimer.reset();
+				_retryTimer.start();
+			}else{
+				trace("Kinect Success");
+				onKinectLoaded();
+			}
+		}
+
+		private function onKinectLoaded():void {
 			if (AIRKinect.rgbEnabled) {
 				_rgbImage = new Bitmap(new BitmapData(640, 480, true, 0xffff0000));
 				_rgbImage.scaleX = _rgbImage.scaleY = .5;
@@ -79,10 +99,44 @@ package com.as3nui.airkinect.demos {
 				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 				AIRKinect.addEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
 			}
+			AIRKinect.addEventListener(KinectErrorEvent.CONNECTION_ERROR, onKinectConnectionError);
 
 			//Listeners
 			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
 			NativeApplication.nativeApplication.addEventListener(Event.EXITING, onExiting);
+			onStageResize(null);
+		}
+
+		private function onKinectConnectionError(event:KinectErrorEvent):void {
+			if(_rgbImage){
+				_rgbImage.bitmapData.dispose();
+				if(this.contains(_rgbImage)) this.removeChild(_rgbImage);
+			}
+			AIRKinect.removeEventListener(CameraFrameEvent.RGB, onRGBFrame);
+
+			if(_depthImage){
+				_depthImage.bitmapData.dispose();
+				if(this.contains(_depthImage)) this.removeChild(_depthImage);
+			}
+			AIRKinect.removeEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
+
+			if (AIRKinect.skeletonEnabled) {
+				if(this.contains(_skeletonsSprite)) this.removeChild(_skeletonsSprite);
+			}
+
+			this.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+			AIRKinect.removeEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
+			AIRKinect.removeEventListener(KinectErrorEvent.CONNECTION_ERROR, onKinectConnectionError);
+
+			//Listeners
+			stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyUp);
+			NativeApplication.nativeApplication.removeEventListener(Event.EXITING, onExiting);
+
+			initKinect();
+		}
+
+		private function onRetryTimer(event:TimerEvent):void {
+			initKinect();
 		}
 
 		private function onKeyUp(event:KeyboardEvent):void {

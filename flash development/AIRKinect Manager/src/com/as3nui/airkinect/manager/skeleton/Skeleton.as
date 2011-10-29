@@ -24,7 +24,7 @@ package com.as3nui.airkinect.manager.skeleton {
 		}
 
 		public function dispose():void {
-			_skeletonPositionsHistory = null;
+			_skeletonPositionsHistory = new Vector.<SkeletonPosition>();
 		}
 
 		public function update(skeletonPosition:SkeletonPosition):void {
