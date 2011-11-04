@@ -6,11 +6,14 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ADL = Debug|ADL
+		No CLR|ADL = No CLR|ADL
 		Release|ADL = Release|ADL
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Debug|ADL.ActiveCfg = Debug|Win32
 		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Debug|ADL.Build.0 = Debug|Win32
+		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.No CLR|ADL.ActiveCfg = No CLR|Win32
+		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.No CLR|ADL.Build.0 = No CLR|Win32
 		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Release|ADL.ActiveCfg = Release|Win32
 		{E316DDA9-3F2B-4952-A6B7-B0CF494EACA6}.Release|ADL.Build.0 = Release|Win32
 	EndGlobalSection

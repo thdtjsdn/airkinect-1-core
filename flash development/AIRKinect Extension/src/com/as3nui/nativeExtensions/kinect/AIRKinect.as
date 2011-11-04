@@ -12,25 +12,31 @@ package com.as3nui.nativeExtensions.kinect {
 	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
 
 	import flash.display.BitmapData;
-	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.StatusEvent;
 	import flash.external.ExtensionContext;
+	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 
 	public class AIRKinect extends EventDispatcher {
-		public static const NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX:uint 	= 0x00000001;
-		public static const NUI_INITIALIZE_FLAG_USES_COLOR:uint 					= 0x00000002;
-		public static const NUI_INITIALIZE_FLAG_USES_SKELETON:uint 					= 0x00000008;
+		public static const NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX:uint = 0x00000001;
+		public static const NUI_INITIALIZE_FLAG_USES_COLOR:uint = 0x00000002;
+		public static const NUI_INITIALIZE_FLAG_USES_SKELETON:uint = 0x00000008;
+		public static const NUI_INITIALIZE_FLAG_USES_DEPTH:uint = 0x00000020;
+
+		public static const NUI_IMAGE_RESOLUTION_80x60:uint = 0;
+		public static const NUI_IMAGE_RESOLUTION_320x240:uint = 1;
+		public static const NUI_IMAGE_RESOLUTION_640x480:uint = 2;
+		public static const NUI_IMAGE_RESOLUTION_1280x1024:uint = 3;
 
 		//Static Constants
-		private static const SKELETON_FRAME:String 	= "skeletonFrame";
-		private static const RGB_FRAME:String 		= "RGBFrame";
-		private static const DEPTH_FRAME:String 	= "depthFrame";
+		private static const SKELETON_FRAME:String = "skeletonFrame";
+		private static const RGB_FRAME:String = "RGBFrame";
+		private static const DEPTH_FRAME:String = "depthFrame";
 		private static const CONNECTION_ERROR:String = "connectionError";
-		private static const EXTENSION_ID:String 	= 'com.as3nui.extensions.AIRKinect';
+		private static const EXTENSION_ID:String = 'com.as3nui.extensions.AIRKinect';
 
 		private static var _KINECT_RUNNING:Boolean;
 
@@ -45,8 +51,8 @@ package com.as3nui.nativeExtensions.kinect {
 			return _instance;
 		}
 
-		public static function initialize(flags:uint = NUI_INITIALIZE_FLAG_USES_SKELETON):Boolean {
-			return instance.initialize(flags);
+		public static function initialize(flags:uint = NUI_INITIALIZE_FLAG_USES_SKELETON, rgbResolution:uint = NUI_IMAGE_RESOLUTION_640x480, depthResolution:uint = NUI_IMAGE_RESOLUTION_320x240):Boolean {
+			return instance.initialize(flags, rgbResolution, depthResolution);
 		}
 
 		public static function shutdown():void {
@@ -75,6 +81,10 @@ package com.as3nui.nativeExtensions.kinect {
 
 		public static function get depthEnabled():Boolean {
 			return instance.depthEnabled;
+		}
+		
+		public static function get isPlayerIndexEnabled():Boolean {
+			return instance.isPlayerIndexEnabled;
 		}
 
 		public static function get skeletonEnabled():Boolean {
@@ -105,6 +115,14 @@ package com.as3nui.nativeExtensions.kinect {
 			_KINECT_RUNNING = value;
 		}
 
+		public static function get rgbSize():Point {
+			return instance.rgbSize;
+		}
+
+		public static function get depthSize():Point {
+			return instance.depthSize;
+		}
+
 		//----------------------------------
 		// Begin Instance
 		//----------------------------------
@@ -119,9 +137,16 @@ package com.as3nui.nativeExtensions.kinect {
 		//Camera Image Variables
 		private var _rgbFrame:ByteArray;
 		private var _rgbImage:BitmapData;
+
 		private var _depthFrame:ByteArray;
 		private var _depthImage:BitmapData;
+		private var _depthPoints:ByteArray;
+
+		//flags passed into c
 		private var _flags:ByteArray;
+		private var _rgbResolution:uint;
+		private var _depthResolution:uint;
+		private var _resolutionSize:Point;
 
 		public function AIRKinect() {
 			createContext();
@@ -137,15 +162,18 @@ package com.as3nui.nativeExtensions.kinect {
 			}
 		}
 
-		public function initialize(kinectFlags:uint = NUI_INITIALIZE_FLAG_USES_SKELETON):Boolean {
-			if(_KINECT_RUNNING) throw new Error("Only one instance of the Kinect maybe run at a time");
+		public function initialize(kinectFlags:uint = NUI_INITIALIZE_FLAG_USES_SKELETON, rgbResolution:uint = NUI_IMAGE_RESOLUTION_640x480, depthResolution:uint = NUI_IMAGE_RESOLUTION_320x240):Boolean {
+			if (_KINECT_RUNNING) throw new Error("Only one instance of the Kinect maybe run at a time");
 
 			_flags = new ByteArray();
 			_flags.writeByte(kinectFlags);
 
-			if(_extCtx == null) createContext();
-			
-			if (!_extCtx.call("kinectStart", kinectFlags)) {
+			_rgbResolution = rgbResolution;
+			_depthResolution = depthResolution;
+
+			if (_extCtx == null) createContext();
+
+			if (!_extCtx.call("kinectStart", kinectFlags, rgbResolution, depthResolution)) {
 				shutdown();
 				return false;
 			}
@@ -153,20 +181,26 @@ package com.as3nui.nativeExtensions.kinect {
 			_KINECT_RUNNING = true;
 			if (rgbEnabled) {
 				_rgbFrame = new ByteArray();
-				_rgbImage = new BitmapData(640, 480, false);
+				_rgbImage = new BitmapData(rgbSize.x, rgbSize.y, false);
 			}
 
 			if (depthEnabled) {
 				_depthFrame = new ByteArray();
-				_depthImage = new BitmapData(320, 240, false);
+				_depthImage = new BitmapData(depthSize.x, depthSize.y, false);
+				if(isPlayerIndexEnabled){
+					_depthPoints = null;
+				}else{
+					_depthPoints = new ByteArray();
+				}
 			}
+
 			return true;
 		}
 
 		public function shutdown():void {
 			_KINECT_RUNNING = false;
-			
-			if(_extCtx) {
+
+			if (_extCtx) {
 				_extCtx.call("kinectStop");
 				_extCtx.removeEventListener(StatusEvent.STATUS, onStatus);
 				_extCtx.dispose();
@@ -174,15 +208,15 @@ package com.as3nui.nativeExtensions.kinect {
 			}
 
 			//Clean up RGB Frame and Image
-			if(_rgbFrame) _rgbFrame = null;
-			if(_rgbImage) {
+			if (_rgbFrame) _rgbFrame = null;
+			if (_rgbImage) {
 				_rgbImage.dispose();
 				_rgbImage = null;
 			}
 
 			//Cleanup Depth Frame and Image
-			if(_depthFrame) _depthFrame = null;
-			if(_depthImage) {
+			if (_depthFrame) _depthFrame = null;
+			if (_depthImage) {
 				_depthImage.dispose();
 				_depthImage = null;
 			}
@@ -216,11 +250,51 @@ package com.as3nui.nativeExtensions.kinect {
 		}
 
 		public function get depthEnabled():Boolean {
-			return (_flags[0] & NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX) != 0;
+			return (((_flags[0] & NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX) != 0) || ((_flags[0] & NUI_INITIALIZE_FLAG_USES_DEPTH) != 0));
+		}
+
+		public function get isPlayerIndexEnabled():Boolean {
+			return ((_flags[0] & NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX) != 0)
 		}
 
 		public function get skeletonEnabled():Boolean {
 			return (_flags[0] & NUI_INITIALIZE_FLAG_USES_SKELETON) != 0;
+		}
+
+		public function get rgbSize():Point {
+			return getResolutionToSize(_rgbResolution);
+		}
+
+		public function get depthSize():Point {
+			return getResolutionToSize(_depthResolution);
+		}
+
+		private function getResolutionToSize(res:uint):Point {
+			if (_resolutionSize == null) _resolutionSize = new Point();
+
+			switch (res) {
+				case NUI_IMAGE_RESOLUTION_80x60:
+					_resolutionSize.x = 80;
+					_resolutionSize.y = 60;
+					break;
+				case NUI_IMAGE_RESOLUTION_320x240:
+					_resolutionSize.x = 320;
+					_resolutionSize.y = 240;
+					break;
+				case NUI_IMAGE_RESOLUTION_640x480:
+					_resolutionSize.x = 640;
+					_resolutionSize.y = 480;
+					break;
+				case NUI_IMAGE_RESOLUTION_1280x1024 :
+					_resolutionSize.x = 1280;
+					_resolutionSize.y = 1024;
+					break;
+				default:
+					_resolutionSize.x = 0;
+					_resolutionSize.y = 0;
+					break;
+			}
+			return _resolutionSize;
 		}
 
 		//----------------------------------
@@ -229,32 +303,38 @@ package com.as3nui.nativeExtensions.kinect {
 		protected function onStatus(event:StatusEvent):void {
 			switch (event.code) {
 				case SKELETON_FRAME:
-					try{
+					try {
 						var currentSkeleton:SkeletonFrame = _extCtx.call('getSkeletonFrameData') as SkeletonFrame;
 						this.dispatchEvent(new SkeletonFrameEvent(currentSkeleton));
-					}catch(e:Error){
+					} catch(e:Error) {
 						trace("Skeleton Frame Error :: " + e.message);
 					}
 					break;
 				case RGB_FRAME:
-					try{
+					try {
 						_extCtx.call('getRGBFrame', _rgbFrame);
 						_rgbFrame.position = 0;
 						_rgbFrame.endian = Endian.LITTLE_ENDIAN;
-						_rgbImage.setPixels(new Rectangle(0, 0, 640, 480), _rgbFrame);
+						_rgbImage.setPixels(new Rectangle(0, 0, _rgbImage.width, _rgbImage.height), _rgbFrame);
 						this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.RGB, _rgbImage.clone()));
-					}catch(e:Error){
+					} catch(e:Error) {
 						trace("RGB Image Error :: " + e.message);
 					}
 					break;
 				case DEPTH_FRAME:
-					try{
-						_extCtx.call('getDepthFrame', _depthFrame);
+					try {
+						_extCtx.call('getDepthFrame', _depthFrame, _depthPoints);
 						_depthFrame.position = 0;
 						_depthFrame.endian = Endian.LITTLE_ENDIAN;
-						_depthImage.setPixels(new Rectangle(0, 0, 320, 240), _depthFrame);
-						this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage.clone()));
-					}catch(e:Error){
+
+						if(_depthPoints){
+							_depthPoints.position = 0;
+							_depthPoints.endian = Endian.LITTLE_ENDIAN;
+						}
+
+						_depthImage.setPixels(new Rectangle(0, 0, _depthImage.width, _depthImage.height), _depthFrame);
+						this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage.clone(), _depthPoints));
+					} catch(e:Error) {
 						trace("Depth Image Error :: " + e.message);
 					}
 					break;

@@ -1,5 +1,8 @@
 // KinectExtension.cpp : Defines the exported functions for the DLL application.
 //
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "stdafx.h"
 #include "AIRKinectExtension.h"
 #include "AIRKinectAdapter.h"
@@ -7,15 +10,10 @@
 extern "C" {
 	AIRKinectAdapter	g_AIRKinectAdapter;
 	NUI_TRANSFORM_SMOOTH_PARAMETERS _transformSmoothingParameters;
-	int32_t m_rgbBa[640*480];
-	DWORD rgbWidth = 640;
-	DWORD rgbHeight = 480;
-	int rgbBytes = 1228800;
-
-	DWORD depthWidth = 320;
-	DWORD depthHeight = 240;
-	int depthBytes = 307200;
-	int32_t m_depthBa[320*240];
+	int32_t *m_rgbBa;
+	
+	int32_t *m_depthBa;
+	USHORT *m_depthPointsBa;
 
 
 	FREObject AIRKINECT_init(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) {
@@ -31,7 +29,18 @@ extern "C" {
 		uint32_t dwFlags;
 		FREGetObjectAsUint32(fdwFlags, &dwFlags);
 
-		HRESULT hr = g_AIRKinectAdapter.start(dwFlags);
+		FREObject fColorResolution = argv[1];
+		uint32_t colorResolutionIndex;
+		FREGetObjectAsUint32(fColorResolution, &colorResolutionIndex);
+		NUI_IMAGE_RESOLUTION colorImageResolution = getResolutionFromIndex(colorResolutionIndex);
+
+		FREObject fDepthResolution = argv[2];
+
+		uint32_t depthResolutionIndex;
+		FREGetObjectAsUint32(fDepthResolution, &depthResolutionIndex);
+		NUI_IMAGE_RESOLUTION depthImageResolution = getResolutionFromIndex(depthResolutionIndex);
+
+		HRESULT hr = g_AIRKinectAdapter.start(dwFlags, colorImageResolution,depthImageResolution);
 
 		bool success = !FAILED(hr);
 		FREObject retObj;
@@ -164,25 +173,27 @@ extern "C" {
 		//OutputDebugString( "AIRKINECT_getRGBFrame\n" );
 		
 		BYTE * pBuffer = g_AIRKinectAdapter.RGBFrameBuffer;
+		int32_t rgbBytesLength = g_AIRKinectAdapter.RGBWidth * g_AIRKinectAdapter.RGBHeight * 4;
+
+		if(m_rgbBa == 0) m_rgbBa = new int32_t[g_AIRKinectAdapter.RGBWidth * g_AIRKinectAdapter.RGBHeight];
+
 		int32_t *rgbrun = m_rgbBa;
 		int32_t * pBufferRun = (int32_t*) pBuffer;
 
-		for( uint32_t x = 0 ; x < rgbWidth ; x++ ) {
-			for( uint32_t y = 0 ; y < rgbHeight ; y++ ) {
-				* rgbrun = 0xff << 24 | *pBufferRun;
-				pBufferRun++;
-				rgbrun++;
-			}
+		for( uint32_t x = 0 ; x < g_AIRKinectAdapter.RGBWidth * g_AIRKinectAdapter.RGBHeight ; x++ ) {
+			* rgbrun = 0xff << 24 | *pBufferRun;
+			pBufferRun++;
+			rgbrun++;
 		}
 
 		FREObject objectByteArray = argv[0];
 
 		FREByteArray byteArray;			
 		FREObject length;
-		FRENewObjectFromUint32(rgbBytes, &length);
+		FRENewObjectFromUint32(rgbBytesLength, &length);
 		FRESetObjectProperty(objectByteArray, (const uint8_t*) "length", length, NULL);
 		FREAcquireByteArray(objectByteArray, &byteArray);
-		memcpy(byteArray.bytes, m_rgbBa, rgbBytes);
+		memcpy(byteArray.bytes, m_rgbBa, rgbBytesLength);
 		FREReleaseByteArray(objectByteArray);
 
 		return NULL;
@@ -191,28 +202,82 @@ extern "C" {
 	FREObject AIRKINECT_getDepthFrame(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
 		//OutputDebugString( "AIRKINECT_getDepthFrame\n" );
 		BYTE * pBuffer = g_AIRKinectAdapter.depthFrameBuffer;
-		int32_t * rgbrun = m_depthBa;
+		int32_t depthBytes = g_AIRKinectAdapter.DepthWidth * g_AIRKinectAdapter.DepthHeight * 4;
+		int32_t pointsBytes = (g_AIRKinectAdapter.DepthWidth * g_AIRKinectAdapter.DepthHeight) * (2*3);
+		
+		if(m_depthBa == 0) m_depthBa = new int32_t[g_AIRKinectAdapter.DepthWidth * g_AIRKinectAdapter.DepthHeight];
+		if(m_depthPointsBa == 0) m_depthPointsBa = new USHORT[(g_AIRKinectAdapter.DepthWidth * g_AIRKinectAdapter.DepthHeight)*3];
+		
+		//Points Byte Array could be Buyte Array or NULL if not used
+		FREObject objectPointsByteArray = argv[1];
+
+		int32_t * depthRun = m_depthBa;
+		USHORT * depthPointsRun = m_depthPointsBa;
+
 		USHORT * pBufferRun = (USHORT*) pBuffer;
-			
+		
+		
 		int32_t value;
-		for( uint32_t x = 0 ; x < depthWidth ; x++ ) {
-			for( uint32_t y = 0 ; y < depthHeight ; y++ ) {
-				RGBQUAD quad = Nui_ShortToQuad_Depth( *pBufferRun );
-				value = quad.rgbReserved << 24 | quad.rgbRed <<16 | quad.rgbGreen << 8| quad.rgbBlue;
-				* rgbrun = 0xff << 24 | value;
-				pBufferRun++;
-				rgbrun++;
-			}
-		}
+		USHORT currentX = 0;
+		USHORT currentY = 0;
+		for( uint32_t x = 0 ; x < g_AIRKinectAdapter.DepthWidth * g_AIRKinectAdapter.DepthHeight ; x++ ) {
 			
+			//Depth Camera only
+			if(! g_AIRKinectAdapter.depthUsesPlayerIndex && objectPointsByteArray != NULL){
+				* depthPointsRun = currentX;
+				depthPointsRun++;
+				* depthPointsRun = currentY;
+				depthPointsRun++;
+				* depthPointsRun = * pBufferRun;
+				
+				depthPointsRun++;
+				currentX++;
+				if(currentX >= g_AIRKinectAdapter.DepthWidth){
+					currentX = 0;
+					currentY++;
+				}
+			}
+
+			RGBQUAD quad = Nui_ShortToQuad_Depth( *pBufferRun, g_AIRKinectAdapter.depthUsesPlayerIndex );
+			value = quad.rgbReserved << 24 | quad.rgbRed <<16 | quad.rgbGreen << 8| quad.rgbBlue;
+			* depthRun = 0xff << 24 | value;
+			pBufferRun++;
+			depthRun++;
+		}
+		
+		//Get Byte Array from flash
 		FREObject objectByteArray = argv[0];
+		//Byte Array for Transfer of memory
 		FREByteArray byteArray;			
+		//Length of Bytes
 		FREObject length;
+
+		//Convert Total Bytes to flash uint
 		FRENewObjectFromUint32(depthBytes, &length);
+		
+		//save total bytes into Flash Byte Array
 		FRESetObjectProperty(objectByteArray, (const uint8_t*) "length", length, NULL);
+
+		//Aquire Flash byte array into byte array
 		FREAcquireByteArray(objectByteArray, &byteArray);
+		
+		//MemCopy current Byte data into byte array
 		memcpy(byteArray.bytes, m_depthBa, depthBytes);
+
+		//Release Flash Byte Array
 		FREReleaseByteArray(objectByteArray);
+		
+
+		//Depth Points, only used in DEPTH only mode, not player
+		if(! g_AIRKinectAdapter.depthUsesPlayerIndex && objectPointsByteArray != NULL){
+			FREByteArray pointsByteArray;			
+			FREObject pointsLength;
+			FRENewObjectFromUint32(pointsBytes, &pointsLength);
+			FRESetObjectProperty(objectPointsByteArray, (const uint8_t*) "length", pointsLength, NULL);
+			FREAcquireByteArray(objectPointsByteArray, &pointsByteArray);
+			memcpy(pointsByteArray.bytes, m_depthPointsBa, pointsBytes);
+			FREReleaseByteArray(objectPointsByteArray);
+		}
 
 		return NULL;
 	}
@@ -287,53 +352,78 @@ extern "C" {
 		return;
 	}
 
-	RGBQUAD Nui_ShortToQuad_Depth( USHORT s ) {
-		USHORT RealDepth = (s & 0xfff8) >> 3;
-		USHORT Player = s & 7;
-		BYTE l = 255 - (BYTE)(256*RealDepth/0x0fff);
-
+	RGBQUAD Nui_ShortToQuad_Depth( USHORT s, BOOLEAN usePlayer ) {
 		RGBQUAD q;
 		q.rgbRed = q.rgbBlue = q.rgbGreen = 0;
 
-		switch( Player ) {
-			case 0:
-				q.rgbRed = l / 2;
-				q.rgbBlue = l / 2;
-				q.rgbGreen = l / 2;
-				break;
-			case 1:
-				q.rgbRed = l;
-				break;
-			case 2:
-				q.rgbGreen = l;
-				break;
-			case 3:
-				q.rgbRed = l / 4;
-				q.rgbGreen = l;
-				q.rgbBlue = l;
-				break;
-			case 4:
-				q.rgbRed = l;
-				q.rgbGreen = l;
-				q.rgbBlue = l / 4;
-				break;
-			case 5:
-				q.rgbRed = l;
-				q.rgbGreen = l / 4;
-				q.rgbBlue = l;
-				break;
-			case 6:
-				q.rgbRed = l / 2;
-				q.rgbGreen = l / 2;
-				q.rgbBlue = l;
-				break;
-			case 7:
-				q.rgbRed = 255 - ( l / 2 );
-				q.rgbGreen = 255 - ( l / 2 );
-				q.rgbBlue = 255 - ( l / 2 );
+		if(usePlayer) {
+			USHORT RealDepth = (s & 0xfff8) >> 3;
+			USHORT Player = s & 7;
+			BYTE l = 255 - (BYTE)(256*RealDepth/0x0fff);
+
+			switch( Player ) {
+				case 0:
+					q.rgbRed = l / 2;
+					q.rgbBlue = l / 2;
+					q.rgbGreen = l / 2;
+					break;
+				case 1:
+					q.rgbRed = l;
+					break;
+				case 2:
+					q.rgbGreen = l;
+					break;
+				case 3:
+					q.rgbRed = l / 4;
+					q.rgbGreen = l;
+					q.rgbBlue = l;
+					break;
+				case 4:
+					q.rgbRed = l;
+					q.rgbGreen = l;
+					q.rgbBlue = l / 4;
+					break;
+				case 5:
+					q.rgbRed = l;
+					q.rgbGreen = l / 4;
+					q.rgbBlue = l;
+					break;
+				case 6:
+					q.rgbRed = l / 2;
+					q.rgbGreen = l / 2;
+					q.rgbBlue = l;
+					break;
+				case 7:
+					q.rgbRed = 255 - ( l / 2 );
+					q.rgbGreen = 255 - ( l / 2 );
+					q.rgbBlue = 255 - ( l / 2 );
+			}
+		}else{
+			if(s > 0x7ff) s = 0x800;
+			BYTE ds = (1 - (((double)s)/0x800)) * 0xff;
+			q.rgbRed = q.rgbGreen = q.rgbBlue = ds;
 		}
 
 		return q;
 	}
 
+
+	NUI_IMAGE_RESOLUTION getResolutionFromIndex(uint32_t index){
+		NUI_IMAGE_RESOLUTION result = NUI_IMAGE_RESOLUTION_320x240;
+		switch(index){
+			case 0:
+				result =  NUI_IMAGE_RESOLUTION_80x60;
+				break;
+			case 1:
+				result =  NUI_IMAGE_RESOLUTION_320x240;
+				break;
+			case 2:
+				result =  NUI_IMAGE_RESOLUTION_640x480;
+				break;
+			case 3:
+				result =  NUI_IMAGE_RESOLUTION_1280x1024;
+				break;
+		}
+		return result;
+	}
 }

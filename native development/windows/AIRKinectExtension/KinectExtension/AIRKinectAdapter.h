@@ -9,7 +9,7 @@ public:
 //------------------------------------------------------------------
 	void								reset();
 	bool								isAvailable();
-	HRESULT								start(uint32_t dwFlags);
+	HRESULT								start(uint32_t dwFlags, _NUI_IMAGE_RESOLUTION colorImageResolution = NUI_IMAGE_RESOLUTION_1280x1024, _NUI_IMAGE_RESOLUTION depthImageResolution = NUI_IMAGE_RESOLUTION_320x240);
 	void								dispose();
 	void								onDepthFrame();
 	void								onRGBFrame();
@@ -25,6 +25,13 @@ public:
 	NUI_SKELETON_FRAME					skeletonFrameBuffer;
 	BYTE *								RGBFrameBuffer;
 	BYTE *								depthFrameBuffer;
+	BOOLEAN								depthUsesPlayerIndex;
+
+	DWORD								RGBWidth;
+	DWORD								RGBHeight;
+
+	DWORD								DepthWidth;
+	DWORD								DepthHeight;
 
 private:
 	static DWORD WINAPI					processThread(LPVOID pParam);

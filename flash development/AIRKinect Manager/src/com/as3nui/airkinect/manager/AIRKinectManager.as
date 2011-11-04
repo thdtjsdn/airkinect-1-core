@@ -76,7 +76,7 @@ package com.as3nui.airkinect.manager {
 
 		public static function getKinectAngle():int {
 			return instance.getKinectAngle();
-		}		
+		}
 
 		public static function numSkeletons():uint {
 			return instance.numSkeletons();
@@ -100,18 +100,20 @@ package com.as3nui.airkinect.manager {
 		protected var _onConnectionError:Signal;
 
 		public function AIRKinectManager() {
-			_skeletonLookup 		= new Dictionary();
-			_onSkeletonAdded 		= new Signal(Skeleton);
-			_onSkeletonUpdate 		= new Signal(Skeleton);
-			_onSkeletonRemoved 		= new Signal(Skeleton);
-			_onRGBFrameUpdate 		= new Signal(BitmapData);
-			_onDepthFrameUpdate		= new Signal(BitmapData);
-			_onConnectionError		= new Signal();
+
 		}
 
 		public function initialize(flags:uint = DEFAULT_FLAGS):Boolean {
 			var success:Boolean = AIRKinect.initialize(flags);
-			if(success) {
+			if (success) {
+				_skeletonLookup = new Dictionary();
+				_onSkeletonAdded = new Signal(Skeleton);
+				_onSkeletonUpdate = new Signal(Skeleton);
+				_onSkeletonRemoved = new Signal(Skeleton);
+				_onRGBFrameUpdate = new Signal(BitmapData);
+				_onDepthFrameUpdate = new Signal(BitmapData);
+				_onConnectionError = new Signal();
+
 				AIRKinect.addEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
 				AIRKinect.addEventListener(CameraFrameEvent.RGB, onRGBFrame);
 				AIRKinect.addEventListener(CameraFrameEvent.DEPTH, onDepthFrame);

@@ -64,12 +64,14 @@ package com.as3nui.airkinect.demos {
 			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON;
 			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR;
 			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX;
-			_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX;
+			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX;
+			_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH;
 			initKinect();
 		}
 
 		private function initKinect():void {
-			if(!AIRKinect.initialize(_flags)){
+			if(!AIRKinect.initialize(_flags, AIRKinect.NUI_IMAGE_RESOLUTION_1280x1024, AIRKinect.NUI_IMAGE_RESOLUTION_640x480)){
+			//if(!AIRKinect.initialize(_flags)){
 				trace("Kinect Failed");
 				_retryTimer.reset();
 				_retryTimer.start();
@@ -81,14 +83,14 @@ package com.as3nui.airkinect.demos {
 
 		private function onKinectLoaded():void {
 			if (AIRKinect.rgbEnabled) {
-				_rgbImage = new Bitmap(new BitmapData(640, 480, true, 0xffff0000));
+				_rgbImage = new Bitmap(new BitmapData(AIRKinect.rgbSize.x, AIRKinect.rgbSize.y, true, 0xffff0000));
 				_rgbImage.scaleX = _rgbImage.scaleY = .5;
 				this.addChild(_rgbImage);
 				AIRKinect.addEventListener(CameraFrameEvent.RGB, onRGBFrame);
 			}
 
 			if (AIRKinect.depthEnabled) {
-				_depthImage = new Bitmap(new BitmapData(320, 240, true, 0xffff0000));
+				_depthImage = new Bitmap(new BitmapData(AIRKinect.depthSize.x, AIRKinect.depthSize.y, true, 0xffff0000));
 				this.addChild(_depthImage);
 				AIRKinect.addEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
 			}

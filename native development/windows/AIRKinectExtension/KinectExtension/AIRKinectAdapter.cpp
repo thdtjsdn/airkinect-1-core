@@ -42,7 +42,7 @@ bool AIRKinectAdapter::isAvailable() {
 	return !FAILED(hr);
 }
 
-HRESULT AIRKinectAdapter::start(uint32_t dwFlags) {
+HRESULT AIRKinectAdapter::start(uint32_t dwFlags, NUI_IMAGE_RESOLUTION colorImageResolution, NUI_IMAGE_RESOLUTION depthImageResolution) {
 	//OutputDebugString( "AIRKinect Adapter :: Start\n" );
 	HRESULT                hr;
 	
@@ -62,12 +62,20 @@ HRESULT AIRKinectAdapter::start(uint32_t dwFlags) {
 	}
 
 	if(dwFlags & NUI_INITIALIZE_FLAG_USES_COLOR) {
-		hr = NuiImageStreamOpen( NUI_IMAGE_TYPE_COLOR, NUI_IMAGE_RESOLUTION_640x480, 0, 2, m_hNextRGBFrameEvent, &m_pRGBStreamHandle );
+		NuiImageResolutionToSize(colorImageResolution, RGBWidth, RGBHeight);
+		hr = NuiImageStreamOpen( NUI_IMAGE_TYPE_COLOR, colorImageResolution, 0, 2, m_hNextRGBFrameEvent, &m_pRGBStreamHandle );
 		if (FAILED(hr)) return hr;
 	}
 
-	if(dwFlags & NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX){
-		hr = NuiImageStreamOpen(NUI_IMAGE_TYPE_DEPTH_AND_PLAYER_INDEX, NUI_IMAGE_RESOLUTION_320x240, 0, 2, m_hNextDepthFrameEvent, &m_pDepthStreamHandle );
+	if(dwFlags & NUI_INITIALIZE_FLAG_USES_DEPTH){
+		depthUsesPlayerIndex = false;
+		NuiImageResolutionToSize(depthImageResolution, DepthWidth, DepthHeight);
+		hr = NuiImageStreamOpen(NUI_IMAGE_TYPE_DEPTH, depthImageResolution, 0, 2, m_hNextDepthFrameEvent, &m_pDepthStreamHandle );
+		if (FAILED(hr)) return hr;
+	}else if(dwFlags & NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX){
+		depthUsesPlayerIndex = true;
+		NuiImageResolutionToSize(depthImageResolution, DepthWidth, DepthHeight);
+		hr = NuiImageStreamOpen(NUI_IMAGE_TYPE_DEPTH_AND_PLAYER_INDEX, depthImageResolution, 0, 2, m_hNextDepthFrameEvent, &m_pDepthStreamHandle );
 		if (FAILED(hr)) return hr;
 	}
 
@@ -159,8 +167,8 @@ void AIRKinectAdapter::onRGBFrame( ) {
 	}
 
 	m_brokenFrames = 0;
-    NuiImageBuffer * pTexture = pImageFrame->pFrameTexture;
-    KINECT_LOCKED_RECT LockedRect;
+    INuiFrameTexture * pTexture = pImageFrame->pFrameTexture;
+    NUI_LOCKED_RECT LockedRect;
     pTexture->LockRect( 0, &LockedRect, NULL, 0 );
     if( LockedRect.Pitch != 0 ) {
         RGBFrameBuffer = (BYTE *) LockedRect.pBits;
@@ -190,8 +198,8 @@ void AIRKinectAdapter::onDepthFrame( ) {
 	}
 
 	m_brokenFrames = 0;
-    NuiImageBuffer * pTexture = pImageFrame->pFrameTexture;
-    KINECT_LOCKED_RECT LockedRect;
+    INuiFrameTexture * pTexture = pImageFrame->pFrameTexture;
+    NUI_LOCKED_RECT LockedRect;
     pTexture->LockRect( 0, &LockedRect, NULL, 0 );
     if( LockedRect.Pitch != 0 ) {
 		depthFrameBuffer = (BYTE *) LockedRect.pBits;

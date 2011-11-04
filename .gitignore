@@ -13,3 +13,6 @@
 /native development/windows/AIRKinectExtension/ipch
 /native development/windows/AIRKinectExtension/KinectExtension/Debug
 /native development/windows/AIRKinectExtension/KinectExtension/Release
+/native development/windows/AIRKinectExtension/No CLR
+/native development/windows/AIRKinectExtension/Release
+/native development/windows/AIRKinectExtension/KinectExtension/No CLR

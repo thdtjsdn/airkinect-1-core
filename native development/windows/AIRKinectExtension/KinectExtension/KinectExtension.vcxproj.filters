@@ -41,6 +41,5 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="FlashRuntimeExtensions.lib" />
-    <Library Include="MSRKinectNUI.lib" />
   </ItemGroup>
 </Project>

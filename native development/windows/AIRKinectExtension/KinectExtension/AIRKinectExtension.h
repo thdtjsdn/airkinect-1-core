@@ -22,5 +22,6 @@ extern "C" {
 	__declspec(dllexport) FREObject AIRKINECT_getRGBFrame(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]);
 	__declspec(dllexport) FREObject AIRKINECT_getDepthFrame(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]);
 
-	RGBQUAD Nui_ShortToQuad_Depth( USHORT s );
+	RGBQUAD Nui_ShortToQuad_Depth( USHORT s, BOOLEAN usePlayer );
+	NUI_IMAGE_RESOLUTION getResolutionFromIndex(uint32_t index);
 }
