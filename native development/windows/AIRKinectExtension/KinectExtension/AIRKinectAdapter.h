@@ -11,6 +11,7 @@ public:
 	bool								isAvailable();
 	HRESULT								start(uint32_t dwFlags, _NUI_IMAGE_RESOLUTION colorImageResolution = NUI_IMAGE_RESOLUTION_1280x1024, _NUI_IMAGE_RESOLUTION depthImageResolution = NUI_IMAGE_RESOLUTION_320x240);
 	void								dispose();
+	void								onDeviceStatus(const NuiStatusData *pStatusData);
 	void								onDepthFrame();
 	void								onRGBFrame();
 	void								onSkeletonFrame();
@@ -18,7 +19,6 @@ public:
 	HRESULT								cameraElevationSetAngle(LONG value);
 	void								setTransformSmoothingParameters(NUI_TRANSFORM_SMOOTH_PARAMETERS smoothingParameters);
 	void								setDefaultSmoothingParameters();
-	void								onConnectionError();
 
 	FREContext							context;
 
@@ -37,7 +37,6 @@ private:
 	static DWORD WINAPI					processThread(LPVOID pParam);
 
 	NUI_TRANSFORM_SMOOTH_PARAMETERS		m_transformSmoothingParameters;
-	uint32_t							m_brokenFrames;
 
 	HANDLE								m_hThNuiProcess;
     HANDLE								m_hEvNuiProcessStop;

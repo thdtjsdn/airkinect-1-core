@@ -7,7 +7,6 @@
 package com.as3nui.airkinect.demos {
 	import com.as3nui.nativeExtensions.kinect.AIRKinect;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
-	import com.as3nui.nativeExtensions.kinect.events.KinectErrorEvent;
 
 	import flash.desktop.NativeApplication;
 	import flash.display.Bitmap;
@@ -90,8 +89,6 @@ package com.as3nui.airkinect.demos {
 			_pointCloudImage = new Bitmap(new BitmapData(AIRKinect.depthSize.x, AIRKinect.depthSize.y, true, 0xffff0000));
 			this.addChild(_pointCloudImage);
 
-			AIRKinect.addEventListener(KinectErrorEvent.CONNECTION_ERROR, onKinectConnectionError);
-
 			//Listeners
 			NativeApplication.nativeApplication.addEventListener(Event.EXITING, onExiting);
 			onStageResize(null);
@@ -102,22 +99,6 @@ package com.as3nui.airkinect.demos {
 
 		private function onMouseWheel(event:MouseEvent):void {
 			_targetZ -= event.shiftKey ? event.delta *2 : event.delta;
-		}
-
-		private function onKinectConnectionError(event:KinectErrorEvent):void {
-			_rgbImage.bitmapData.dispose();
-			if(this.contains(_rgbImage)) this.removeChild(_rgbImage);
-			AIRKinect.removeEventListener(CameraFrameEvent.RGB, onRGBFrame);
-
-			_depthImage.bitmapData.dispose();
-			if(this.contains(_depthImage)) this.removeChild(_depthImage);
-			AIRKinect.removeEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
-
-			AIRKinect.removeEventListener(KinectErrorEvent.CONNECTION_ERROR, onKinectConnectionError);
-
-			NativeApplication.nativeApplication.removeEventListener(Event.EXITING, onExiting);
-
-			initKinect();
 		}
 
 		private function onExiting(event:Event):void {

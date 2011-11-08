@@ -11,7 +11,7 @@ package com.as3nui.airkinect.manager {
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
-	import com.as3nui.nativeExtensions.kinect.events.KinectErrorEvent;
+	import com.as3nui.nativeExtensions.kinect.events.DeviceStatusEvent;
 	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
 
 	import flash.display.BitmapData;
@@ -38,10 +38,6 @@ package com.as3nui.airkinect.manager {
 			instance.shutdown();
 		}
 
-		public static function dispose():void {
-			instance.dispose();
-		}
-
 		public static function get onSkeletonUpdate():Signal {
 			return instance.onSkeletonUpdate;
 		}
@@ -66,8 +62,12 @@ package com.as3nui.airkinect.manager {
 			return instance.onDepthFrameUpdate;
 		}
 
-		public static function get onConnectionError():Signal {
-			return instance.onConnectionError;
+		public static function get onKinectReconnected():Signal {
+			return instance.onKinectReconnected;
+		}
+
+		public static function get onKinectDisconnected():Signal {
+			return instance.onKinectDisconnected;
 		}
 
 		public static function setKinectAngle(angle:int):void {
@@ -97,7 +97,11 @@ package com.as3nui.airkinect.manager {
 
 		protected var _onRGBFrameUpdate:Signal;
 		protected var _onDepthFrameUpdate:Signal;
-		protected var _onConnectionError:Signal;
+		protected var _onKinectDisconnected:Signal;
+		protected var _onKinectReconnected:Signal;
+
+		protected var _currentFlags:uint;
+		protected var _isInitialized:Boolean;
 
 		public function AIRKinectManager() {
 
@@ -105,19 +109,25 @@ package com.as3nui.airkinect.manager {
 
 		public function initialize(flags:uint = DEFAULT_FLAGS):Boolean {
 			var success:Boolean = AIRKinect.initialize(flags);
-			if (success) {
+			if (success && !_isInitialized) {
 				_skeletonLookup = new Dictionary();
 				_onSkeletonAdded = new Signal(Skeleton);
 				_onSkeletonUpdate = new Signal(Skeleton);
 				_onSkeletonRemoved = new Signal(Skeleton);
 				_onRGBFrameUpdate = new Signal(BitmapData);
 				_onDepthFrameUpdate = new Signal(BitmapData);
-				_onConnectionError = new Signal();
+				_onKinectDisconnected = new Signal();
+				_onKinectReconnected = new Signal(Boolean);
 
 				AIRKinect.addEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
 				AIRKinect.addEventListener(CameraFrameEvent.RGB, onRGBFrame);
 				AIRKinect.addEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
-				AIRKinect.addEventListener(KinectErrorEvent.CONNECTION_ERROR, onKinectConnectionError);
+
+				AIRKinect.addEventListener(DeviceStatusEvent.RECONNECTED, onKinectReconnection);
+				AIRKinect.addEventListener(DeviceStatusEvent.DISCONNECTED, onKinectDisconnection);
+
+				_currentFlags = flags;
+				_isInitialized = true;
 			}
 			return success;
 		}
@@ -126,28 +136,31 @@ package com.as3nui.airkinect.manager {
 		 * Dispose Memory used by Kinect Manager and Kinect Extension
 		 */
 		public function shutdown():void {
+			if(_onSkeletonAdded) _onSkeletonAdded.removeAll();
+			if(_onSkeletonUpdate) _onSkeletonUpdate.removeAll();
+			if(_onSkeletonRemoved) _onSkeletonRemoved.removeAll();
+			if(_onRGBFrameUpdate) _onRGBFrameUpdate.removeAll();
+			if(_onDepthFrameUpdate) _onDepthFrameUpdate.removeAll();
+			if(_onKinectDisconnected) _onKinectDisconnected.removeAll();
+			if(_onKinectReconnected) _onKinectReconnected.removeAll();
+			cleanupSkeletons();
+
 			AIRKinect.removeEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
 			AIRKinect.removeEventListener(CameraFrameEvent.RGB, onRGBFrame);
 			AIRKinect.removeEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
-			AIRKinect.shutdown();
 			_skeletonLookup = null;
+
+			_currentFlags = 0;
+			_isInitialized = null;
 		}
 
-		public function dispose():void {
-			_onSkeletonAdded.removeAll();
-			_onSkeletonUpdate.removeAll();
-			_onSkeletonRemoved.removeAll();
-			_onRGBFrameUpdate.removeAll();
-			_onDepthFrameUpdate.removeAll();
-			_onConnectionError.removeAll();
-
+		protected function cleanupSkeletons():void{
 			var skeletonIndex:String;
 			for (skeletonIndex in _skeletonLookup) {
 				if (_skeletonLookup[skeletonIndex] is Skeleton) {
 					(_skeletonLookup[skeletonIndex] as Skeleton).dispose();
 				}
 			}
-			this.shutdown();
 		}
 
 		//----------------------------------
@@ -228,20 +241,25 @@ package com.as3nui.airkinect.manager {
 		}
 
 		//----------------------------------
-		// Connection Error
+		// Kinect Disconnect/Reconnect
 		//----------------------------------
-		private function onKinectConnectionError(event:KinectErrorEvent):void {
+		private function onKinectDisconnection(event:DeviceStatusEvent):void {
 			var skeletonIndex:String;
 			for (skeletonIndex in _skeletonLookup) {
 				if (_skeletonLookup[skeletonIndex] is Skeleton) {
 					(_skeletonLookup[skeletonIndex] as Skeleton).dispose();
 				}
 			}
-			_onConnectionError.dispatch();
+			_onKinectDisconnected.dispatch();
+
 			_skeletonLookup = new Dictionary();
-			this.dispose();
+			cleanupSkeletons();
 		}
 
+		private function onKinectReconnection(event:DeviceStatusEvent):void {
+			_onKinectReconnected.dispatch(AIRKinect.initialize(_currentFlags));
+		}
+		
 		//----------------------------------
 		// Kinect Angle
 		//----------------------------------
@@ -277,8 +295,12 @@ package com.as3nui.airkinect.manager {
 			return _onDepthFrameUpdate;
 		}
 
-		public function get onConnectionError():Signal {
-			return _onConnectionError;
+		public function get onKinectDisconnected():Signal {
+			return _onKinectDisconnected;
+		}
+
+		public function get onKinectReconnected():Signal {
+			return _onKinectReconnected;
 		}
 	}
 }

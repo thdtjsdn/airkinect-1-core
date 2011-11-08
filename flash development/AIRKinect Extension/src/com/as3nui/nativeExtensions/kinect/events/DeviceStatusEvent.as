@@ -1,15 +1,16 @@
 package com.as3nui.nativeExtensions.kinect.events {
 	import flash.events.Event;
 
-	public class KinectErrorEvent extends Event {
-		public static const CONNECTION_ERROR:String = "connection_error";
+	public class DeviceStatusEvent extends Event {
+		public static const DISCONNECTED:String 	= "disconnected";
+		public static const RECONNECTED:String 		= "connected";
 
-		public function KinectErrorEvent(type:String) {
+		public function DeviceStatusEvent(type:String) {
 			super(type);
 		}
 
 		public override function clone():Event {
-			return new KinectErrorEvent(type);
+			return new DeviceStatusEvent(type);
 		}
 
 		public override function toString():String {

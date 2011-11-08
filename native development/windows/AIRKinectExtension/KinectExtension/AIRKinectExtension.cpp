@@ -17,6 +17,8 @@ extern "C" {
 
 
 	FREObject AIRKINECT_init(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) {
+		MSR_NuiSetDeviceStatusCallback(&onDeviceStatus);
+
 		//OutputDebugString( "AIRKinect :: init\n" );
 		g_AIRKinectAdapter.setDefaultSmoothingParameters();
 		return NULL;
@@ -51,6 +53,7 @@ extern "C" {
 	FREObject AIRKINECT_stopKinect(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) {\
 		//OutputDebugString( "AIRKINECT_stopKinect\n" );
 		g_AIRKinectAdapter.dispose();
+		g_AIRKinectAdapter.reset();
 		return NULL;
 	}
 
@@ -200,7 +203,7 @@ extern "C" {
 	}
 
 	FREObject AIRKINECT_getDepthFrame(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
-		//OutputDebugString( "AIRKINECT_getDepthFrame\n" );
+		OutputDebugString( "AIRKINECT_getDepthFrame\n" );
 		BYTE * pBuffer = g_AIRKinectAdapter.depthFrameBuffer;
 		int32_t depthBytes = g_AIRKinectAdapter.DepthWidth * g_AIRKinectAdapter.DepthHeight * 4;
 		int32_t pointsBytes = (g_AIRKinectAdapter.DepthWidth * g_AIRKinectAdapter.DepthHeight) * (2*3);
@@ -350,6 +353,11 @@ extern "C" {
 	void finalizer(void* extData) {
 		//OutputDebugString( "finalizer\n" );
 		return;
+	}
+
+	void CALLBACK onDeviceStatus(const NuiStatusData *pStatusData) {
+		OutputDebugString( "Device Status\n" );
+		g_AIRKinectAdapter.onDeviceStatus(pStatusData);
 	}
 
 	RGBQUAD Nui_ShortToQuad_Depth( USHORT s, BOOLEAN usePlayer ) {

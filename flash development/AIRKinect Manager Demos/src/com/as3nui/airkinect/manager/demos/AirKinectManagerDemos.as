@@ -5,8 +5,6 @@
  * Time: 5:51 PM
  */
 package com.as3nui.airkinect.manager.demos {
-	import com.as3nui.nativeExtensions.kinect.AIRKinect;
-	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
 	import com.as3nui.airkinect.manager.AIRKinectManager;
 	import com.as3nui.airkinect.manager.gestures.AIRKinectGestureManager;
 	import com.as3nui.airkinect.manager.gestures.SwipeGesture;
@@ -14,9 +12,10 @@ package com.as3nui.airkinect.manager.demos {
 	import com.as3nui.airkinect.manager.regions.RegionPlanes;
 	import com.as3nui.airkinect.manager.regions.TrackedRegion;
 	import com.as3nui.airkinect.manager.skeleton.Skeleton;
+	import com.as3nui.nativeExtensions.kinect.AIRKinect;
+	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
 
 	import flash.desktop.NativeApplication;
-
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
@@ -24,7 +23,6 @@ package com.as3nui.airkinect.manager.demos {
 	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
-	import flash.utils.Timer;
 
 	public class AirKinectManagerDemos extends Sprite {
 		private var _kinectMaxDepthInFlash:uint = 200;
@@ -32,7 +30,6 @@ package com.as3nui.airkinect.manager.demos {
 		private var _trackedRegionSprite:Sprite;
 		private var _activeSkeleton:Skeleton;
 		private var _trackedRegion:TrackedRegion;
-		private var _retryTimer:Timer;
 		
 		public function AirKinectManagerDemos() {
 			this.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage)
@@ -62,46 +59,30 @@ package com.as3nui.airkinect.manager.demos {
 			initKinect();
 		}
 
-
 		private function initKinect():void {
-			trace("initKinect");
+//			trace("initKinect");
 			if(AIRKinectManager.initialize(AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON)){
-				trace("Connected");
 				AIRKinectManager.onSkeletonAdded.add(onSkeletonAdded);
 				AIRKinectManager.onSkeletonRemoved.add(onSkeletonRemoved);
-				AIRKinectManager.onConnectionError.add(onConnectionError);
+				AIRKinectManager.onKinectDisconnected.add(onKinectDisconnected);
+				AIRKinectManager.onKinectReconnected.add(onKinectReconnected);
 
 				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
-
-				if(_retryTimer){
-					_retryTimer.stop();
-					_retryTimer.removeEventListener(TimerEvent.TIMER, onRetryTimerTick);
-					_retryTimer = null;
-				}
-			}else{
-				if(_retryTimer == null) {
-					_retryTimer = new Timer(5000, 1);
-					_retryTimer.addEventListener(TimerEvent.TIMER, onRetryTimerTick);
-				}
-				_retryTimer.reset();
-				_retryTimer.start();
 			}
 		}
 
-		private function onConnectionError():void {
-			AIRKinectManager.onSkeletonAdded.remove(onSkeletonAdded);
-			AIRKinectManager.onSkeletonRemoved.remove(onSkeletonRemoved);
-			AIRKinectManager.onConnectionError.remove(onConnectionError);
-
-			initKinect();
+		private function onKinectDisconnected():void {
+//			trace("kinect was lost :(");
+			this.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 
-		private function onRetryTimerTick(event:TimerEvent):void {
-			initKinect();
+		private function onKinectReconnected(success:Boolean):void {
+//			trace("kinect was found, reconnection success was :: "+ success);
+			this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 
 		private function onExiting(event:Event):void {
-			AIRKinectManager.dispose();
+			AIRKinectManager.shutdown();
 		}
 
 		private function onEnterFrame(event:Event):void {

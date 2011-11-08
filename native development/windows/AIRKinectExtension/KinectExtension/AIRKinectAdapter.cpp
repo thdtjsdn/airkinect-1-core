@@ -2,8 +2,6 @@
 #include "AIRKinectAdapter.h"
 
 NUI_TRANSFORM_SMOOTH_PARAMETERS m_transformSmoothingParameters;
-uint32_t	m_brokenFrames;
-
 AIRKinectAdapter::AIRKinectAdapter(){
 	setDefaultSmoothingParameters();
 }
@@ -23,7 +21,6 @@ void AIRKinectAdapter::reset() {
     
 	m_hThNuiProcess					= NULL;
     m_hEvNuiProcessStop				= NULL;
-	m_brokenFrames					= 0;
 }
 
 void AIRKinectAdapter::setDefaultSmoothingParameters() {
@@ -112,8 +109,6 @@ void AIRKinectAdapter::dispose( ){
         CloseHandle( m_hNextRGBFrameEvent );
         m_hNextRGBFrameEvent = NULL;
     }
-
-	reset();
 }
 
 DWORD WINAPI AIRKinectAdapter::processThread(LPVOID pParam) {
@@ -131,12 +126,6 @@ DWORD WINAPI AIRKinectAdapter::processThread(LPVOID pParam) {
         nEventIdx=WaitForMultipleObjects(sizeof(hEvents)/sizeof(hEvents[0]),hEvents,FALSE,100);
 
         if(nEventIdx==0) break;
-
-		if(pthis->m_brokenFrames >= 10){
-			pthis->onConnectionError();
-			pthis		= NULL;
-			return (0);
-		}
 
         switch(nEventIdx) {
             case 1:
@@ -156,17 +145,26 @@ DWORD WINAPI AIRKinectAdapter::processThread(LPVOID pParam) {
     return (0);
 }
 
+void AIRKinectAdapter::onDeviceStatus(const NuiStatusData *pStatusData){
+	const uint8_t* statusCode = (const uint8_t*) "deviceStatus";
+	const uint8_t* level = (const uint8_t*) "unknown";
+	
+	if (SUCCEEDED(pStatusData->hrStatus)) {
+		level = (const uint8_t*) "connected";
+	}else{
+		dispose();
+		level = (const uint8_t*) "disconnected";
+	}
+	FREDispatchStatusEventAsync(context, statusCode, level);
+}
+
 void AIRKinectAdapter::onRGBFrame( ) {
 	//OutputDebugString( "AIRKinect Adapter :: onRGBFrame\n" );
     const NUI_IMAGE_FRAME * pImageFrame = NULL;
 
     HRESULT hr = NuiImageStreamGetNextFrame(m_pRGBStreamHandle, 0, &pImageFrame );
-    if (FAILED(hr)) {
-		m_brokenFrames++;
-		return;
-	}
+    if (FAILED(hr)) return;
 
-	m_brokenFrames = 0;
     INuiFrameTexture * pTexture = pImageFrame->pFrameTexture;
     NUI_LOCKED_RECT LockedRect;
     pTexture->LockRect( 0, &LockedRect, NULL, 0 );
@@ -192,12 +190,8 @@ void AIRKinectAdapter::onDepthFrame( ) {
 
     HRESULT hr = NuiImageStreamGetNextFrame( m_pDepthStreamHandle, 0, &pImageFrame );
 
-    if(FAILED(hr)) {
-		m_brokenFrames++;
-		return;
-	}
+    if(FAILED(hr)) return;
 
-	m_brokenFrames = 0;
     INuiFrameTexture * pTexture = pImageFrame->pFrameTexture;
     NUI_LOCKED_RECT LockedRect;
     pTexture->LockRect( 0, &LockedRect, NULL, 0 );
@@ -219,24 +213,12 @@ void AIRKinectAdapter::onSkeletonFrame( ) {
 	NUI_SKELETON_FRAME SkeletonFrame;
 
     HRESULT hr = NuiSkeletonGetNextFrame( 0, &SkeletonFrame );
+	if(FAILED(hr)) return;
 
-	if(FAILED(hr)) {
-		m_brokenFrames++;
-		return;
-	}
-
-	m_brokenFrames = 0;
 	NuiTransformSmooth(&SkeletonFrame, &m_transformSmoothingParameters);
 	skeletonFrameBuffer = SkeletonFrame;
 
 	const uint8_t* statusCode = (const uint8_t*) "skeletonFrame";
-	const uint8_t* level = (const uint8_t*) "";
-	
-	FREDispatchStatusEventAsync(context, statusCode, level);
-}
-
-void AIRKinectAdapter::onConnectionError() {
-	const uint8_t* statusCode = (const uint8_t*) "connectionError";
 	const uint8_t* level = (const uint8_t*) "";
 	
 	FREDispatchStatusEventAsync(context, statusCode, level);

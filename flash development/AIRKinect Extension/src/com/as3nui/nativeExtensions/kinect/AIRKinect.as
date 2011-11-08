@@ -8,7 +8,7 @@ package com.as3nui.nativeExtensions.kinect {
 	import com.as3nui.nativeExtensions.kinect.data.NUITransformSmoothParameters;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
-	import com.as3nui.nativeExtensions.kinect.events.KinectErrorEvent;
+	import com.as3nui.nativeExtensions.kinect.events.DeviceStatusEvent;
 	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
 
 	import flash.display.BitmapData;
@@ -32,11 +32,16 @@ package com.as3nui.nativeExtensions.kinect {
 		public static const NUI_IMAGE_RESOLUTION_1280x1024:uint = 3;
 
 		//Static Constants
+		private static const DEVICE_STATUS:String = "deviceStatus";
 		private static const SKELETON_FRAME:String = "skeletonFrame";
 		private static const RGB_FRAME:String = "RGBFrame";
 		private static const DEPTH_FRAME:String = "depthFrame";
 		private static const CONNECTION_ERROR:String = "connectionError";
 		private static const EXTENSION_ID:String = 'com.as3nui.extensions.AIRKinect';
+
+		//Device Status Constants
+		private const DEVICE_STATUS_CONNECTED:String 		= "connected";
+		private const DEVICE_STATUS_DISCONNECTED:String 	= "disconnected";
 
 		private static var _KINECT_RUNNING:Boolean;
 
@@ -198,15 +203,23 @@ package com.as3nui.nativeExtensions.kinect {
 		}
 
 		public function shutdown():void {
-			_KINECT_RUNNING = false;
+			cleanupNativeExtension();
+			cleanupASExtension();
+		}
 
+		private function cleanupNativeExtension():void {
 			if (_extCtx) {
 				_extCtx.call("kinectStop");
 				_extCtx.removeEventListener(StatusEvent.STATUS, onStatus);
 				_extCtx.dispose();
 				_extCtx = null;
 			}
+		}
 
+		private function cleanupASExtension():void {
+			_KINECT_RUNNING = false;
+			_flags = new ByteArray();
+			
 			//Clean up RGB Frame and Image
 			if (_rgbFrame) _rgbFrame = null;
 			if (_rgbImage) {
@@ -220,6 +233,10 @@ package com.as3nui.nativeExtensions.kinect {
 				_depthImage.dispose();
 				_depthImage = null;
 			}
+		}
+
+		private function onDisconnected():void {
+			cleanupASExtension();
 		}
 
 		//----------------------------------
@@ -302,6 +319,18 @@ package com.as3nui.nativeExtensions.kinect {
 		//----------------------------------
 		protected function onStatus(event:StatusEvent):void {
 			switch (event.code) {
+				case DEVICE_STATUS:
+//						trace("Device Status :: " + event.level);
+						switch(event.level){
+							case DEVICE_STATUS_DISCONNECTED:
+								onDisconnected();
+								this.dispatchEvent(new DeviceStatusEvent(DeviceStatusEvent.DISCONNECTED));
+								break;
+							case DEVICE_STATUS_CONNECTED:
+								this.dispatchEvent(new DeviceStatusEvent(DeviceStatusEvent.RECONNECTED));
+								break;
+						}
+					break;
 				case SKELETON_FRAME:
 					try {
 						var currentSkeleton:SkeletonFrame = _extCtx.call('getSkeletonFrameData') as SkeletonFrame;
@@ -337,10 +366,6 @@ package com.as3nui.nativeExtensions.kinect {
 					} catch(e:Error) {
 						trace("Depth Image Error :: " + e.message);
 					}
-					break;
-				case CONNECTION_ERROR:
-					this.shutdown();
-					this.dispatchEvent(new KinectErrorEvent(KinectErrorEvent.CONNECTION_ERROR));
 					break;
 			}
 		}

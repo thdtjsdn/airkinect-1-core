@@ -12,7 +12,6 @@ package com.as3nui.airkinect.demos {
 
 	import com.as3nui.nativeExtensions.kinect.AIRKinect;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
-	import com.as3nui.nativeExtensions.kinect.events.KinectErrorEvent;
 
 	import flash.desktop.NativeApplication;
 	import flash.display.Bitmap;
@@ -83,8 +82,6 @@ package com.as3nui.airkinect.demos {
 			this.addChild(_depthImage);
 			AIRKinect.addEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
 
-			AIRKinect.addEventListener(KinectErrorEvent.CONNECTION_ERROR, onKinectConnectionError);
-
 			//Listeners
 			NativeApplication.nativeApplication.addEventListener(Event.EXITING, onExiting);
 			onStageResize(null);
@@ -93,22 +90,6 @@ package com.as3nui.airkinect.demos {
 
 			init3D();
 		}
-
-
-		private function onKinectConnectionError(event:KinectErrorEvent):void {
-			_rgbImage.bitmapData.dispose();
-			if(this.contains(_rgbImage)) this.removeChild(_rgbImage);
-			AIRKinect.removeEventListener(CameraFrameEvent.RGB, onRGBFrame);
-
-			_depthImage.bitmapData.dispose();
-			if(this.contains(_depthImage)) this.removeChild(_depthImage);
-			AIRKinect.removeEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
-
-
-			AIRKinect.removeEventListener(KinectErrorEvent.CONNECTION_ERROR, onKinectConnectionError);
-			NativeApplication.nativeApplication.removeEventListener(Event.EXITING, onExiting);
-		}
-
 		private function onExiting(event:Event):void {
 			AIRKinect.shutdown();
 		}
@@ -152,7 +133,7 @@ package com.as3nui.airkinect.demos {
 
 		private function onEnterFrame(event:Event):void {
 			_view.render();
-				if(_elevation) {
+			if(_elevation) {
 				_elevation.rotationY+=_rotationSpeed;
 				if(_elevation.rotationY > 60) {
 					_elevation.rotationY = 60;
