@@ -151,7 +151,7 @@ package com.as3nui.airkinect.manager {
 			_skeletonLookup = null;
 
 			_currentFlags = 0;
-			_isInitialized = null;
+			_isInitialized = false;
 		}
 
 		protected function cleanupSkeletons():void{
@@ -244,6 +244,7 @@ package com.as3nui.airkinect.manager {
 		// Kinect Disconnect/Reconnect
 		//----------------------------------
 		private function onKinectDisconnection(event:DeviceStatusEvent):void {
+			trace("Kinect Manager :: Disconnection");
 			var skeletonIndex:String;
 			for (skeletonIndex in _skeletonLookup) {
 				if (_skeletonLookup[skeletonIndex] is Skeleton) {
@@ -257,6 +258,7 @@ package com.as3nui.airkinect.manager {
 		}
 
 		private function onKinectReconnection(event:DeviceStatusEvent):void {
+			trace("Kinect Manager :: Reconnection");
 			_onKinectReconnected.dispatch(AIRKinect.initialize(_currentFlags));
 		}
 		

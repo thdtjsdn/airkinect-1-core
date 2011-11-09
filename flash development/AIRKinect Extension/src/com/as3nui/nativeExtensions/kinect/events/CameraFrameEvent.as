@@ -16,7 +16,7 @@ package com.as3nui.nativeExtensions.kinect.events {
 		}
 
 		public override function clone():Event {
-			return new CameraFrameEvent(type, _frame);
+			return new CameraFrameEvent(type, _frame, _data);
 		}
 
 		public override function toString():String {

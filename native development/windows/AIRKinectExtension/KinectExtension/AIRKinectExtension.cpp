@@ -203,7 +203,7 @@ extern "C" {
 	}
 
 	FREObject AIRKINECT_getDepthFrame(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[]) { 
-		OutputDebugString( "AIRKINECT_getDepthFrame\n" );
+		//OutputDebugString( "AIRKINECT_getDepthFrame\n" );
 		BYTE * pBuffer = g_AIRKinectAdapter.depthFrameBuffer;
 		int32_t depthBytes = g_AIRKinectAdapter.DepthWidth * g_AIRKinectAdapter.DepthHeight * 4;
 		int32_t pointsBytes = (g_AIRKinectAdapter.DepthWidth * g_AIRKinectAdapter.DepthHeight) * (2*3);
@@ -356,7 +356,7 @@ extern "C" {
 	}
 
 	void CALLBACK onDeviceStatus(const NuiStatusData *pStatusData) {
-		OutputDebugString( "Device Status\n" );
+		//OutputDebugString( "Device Status\n" );
 		g_AIRKinectAdapter.onDeviceStatus(pStatusData);
 	}
 
