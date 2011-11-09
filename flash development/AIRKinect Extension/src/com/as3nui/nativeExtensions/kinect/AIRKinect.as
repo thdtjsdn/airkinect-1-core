@@ -317,7 +317,7 @@ package com.as3nui.nativeExtensions.kinect {
 		//----------------------------------
 		// Private Functions
 		//----------------------------------
-		protected function onStatus(event:StatusEvent):void {
+		private function onStatus(event:StatusEvent):void {
 			switch (event.code) {
 				case DEVICE_STATUS:
 //						trace("Device Status :: " + event.level);
