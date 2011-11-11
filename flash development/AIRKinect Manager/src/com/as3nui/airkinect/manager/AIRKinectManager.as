@@ -7,7 +7,7 @@
 package com.as3nui.airkinect.manager {
 	import com.as3nui.airkinect.manager.skeleton.Skeleton;
 	import com.as3nui.nativeExtensions.kinect.AIRKinect;
-	import com.as3nui.nativeExtensions.kinect.AIRKinectCameraConstants;
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectCameraConstants;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;

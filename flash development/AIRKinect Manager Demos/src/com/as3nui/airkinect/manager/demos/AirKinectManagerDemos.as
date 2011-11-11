@@ -12,7 +12,7 @@ package com.as3nui.airkinect.manager.demos {
 	import com.as3nui.airkinect.manager.regions.RegionPlanes;
 	import com.as3nui.airkinect.manager.regions.TrackedRegion;
 	import com.as3nui.airkinect.manager.skeleton.Skeleton;
-	import com.as3nui.nativeExtensions.kinect.AIRKinect;
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectFlags;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
 
 	import flash.desktop.NativeApplication;
@@ -20,7 +20,6 @@ package com.as3nui.airkinect.manager.demos {
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
-	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 
@@ -61,7 +60,7 @@ package com.as3nui.airkinect.manager.demos {
 
 		private function initKinect():void {
 //			trace("initKinect");
-			if(AIRKinectManager.initialize(AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON)){
+			if(AIRKinectManager.initialize(AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_SKELETON)){
 				AIRKinectManager.onSkeletonAdded.add(onSkeletonAdded);
 				AIRKinectManager.onSkeletonRemoved.add(onSkeletonRemoved);
 				AIRKinectManager.onKinectDisconnected.add(onKinectDisconnected);

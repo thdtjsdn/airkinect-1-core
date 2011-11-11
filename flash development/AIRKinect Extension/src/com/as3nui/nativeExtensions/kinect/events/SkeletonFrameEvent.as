@@ -4,7 +4,15 @@ package com.as3nui.nativeExtensions.kinect.events {
 	import flash.events.Event;
 
 	public class SkeletonFrameEvent extends Event {
+
+		/**
+		 * Dispatched with a new skeleton frame
+		 */
 		public static const UPDATE:String = "skeleton_frame_update";
+
+		/**
+		 * Current Skeleton Frame
+		 */
 		private var _skeletonFrame:SkeletonFrame;
 
 		public function SkeletonFrameEvent(skeletonFrame:SkeletonFrame) {
@@ -20,6 +28,9 @@ package com.as3nui.nativeExtensions.kinect.events {
 			return formatToString("SkeletonFrameEvent", "type", "skeletonFrame");
 		}
 
+		/**
+		 * Skeleton Frame for this event
+		 */
 		public function get skeletonFrame():SkeletonFrame {
 			return _skeletonFrame;
 		}

@@ -6,6 +6,7 @@
  */
 package com.as3nui.airkinect.demos {
 	import com.as3nui.nativeExtensions.kinect.AIRKinect;
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectFlags;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
 
 	import flash.desktop.NativeApplication;
@@ -63,7 +64,7 @@ package com.as3nui.airkinect.demos {
 		}
 
 		private function initDemo():void {
-			_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH;
+			_flags = AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_COLOR | AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_DEPTH;
 			initKinect();
 		}
 

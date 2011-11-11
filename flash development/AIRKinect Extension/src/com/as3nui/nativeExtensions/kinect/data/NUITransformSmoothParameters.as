@@ -5,6 +5,9 @@
  * Time: 1:14 AM
  */
 package com.as3nui.nativeExtensions.kinect.data {
+	/**
+	 * Smoothing Parameters for Skeleton Frames
+	 */
 	public class NUITransformSmoothParameters {
 		private var _fCorrection:Number;
 		private var _fSmoothing:Number;

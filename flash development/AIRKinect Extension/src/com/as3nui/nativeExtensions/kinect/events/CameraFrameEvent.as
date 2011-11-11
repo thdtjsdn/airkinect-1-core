@@ -4,9 +4,23 @@ package com.as3nui.nativeExtensions.kinect.events {
 	import flash.utils.ByteArray;
 
 	public class CameraFrameEvent extends Event {
+		/**
+		 * Dispatched with new RGB frame from Kinect Camera
+		 */
 		public static const RGB:String 		= "rgb_frame_update";
+		/**
+		 * Dispatched with new Depth Frame from Kinect Camers
+		 */
 		public static const DEPTH:String 	= "depth_frame_update";
+
+		/**
+		 * BitmapData for the current frame
+		 */
 		private var _frame:BitmapData;
+		/**
+		 * Only created using AIRkinectFlags.NUI_INITIALIZE_FLAG_USES_DEPTH mode. Data is a Byte Array in the format x,y,z where each us a Unsigned Short
+		 * the array will contain ((_frame.width * _frame.height) * (2 *3)) bytes. (2 bytes per UShort and 3 USHORTs per pixel.)
+		 */
 		private var _data:ByteArray;
 
 		public function CameraFrameEvent(type:String, frame:BitmapData, data:ByteArray = null) {

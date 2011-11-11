@@ -5,6 +5,8 @@
  * Time: 3:09 PM
  */
 package com.as3nui.nativeExtensions.kinect {
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectCameraResolutions;
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectFlags;
 	import com.as3nui.nativeExtensions.kinect.data.NUITransformSmoothParameters;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
@@ -21,28 +23,46 @@ package com.as3nui.nativeExtensions.kinect {
 	import flash.utils.Endian;
 
 	public class AIRKinect extends EventDispatcher {
-		public static const NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX:uint = 0x00000001;
-		public static const NUI_INITIALIZE_FLAG_USES_COLOR:uint = 0x00000002;
-		public static const NUI_INITIALIZE_FLAG_USES_SKELETON:uint = 0x00000008;
-		public static const NUI_INITIALIZE_FLAG_USES_DEPTH:uint = 0x00000020;
 
-		public static const NUI_IMAGE_RESOLUTION_80x60:uint = 0;
-		public static const NUI_IMAGE_RESOLUTION_320x240:uint = 1;
-		public static const NUI_IMAGE_RESOLUTION_640x480:uint = 2;
-		public static const NUI_IMAGE_RESOLUTION_1280x1024:uint = 3;
+		/**
+		 * Fully qualified name to Extension
+		 */
+		private static const EXTENSION_ID:String 				= "com.as3nui.extensions.AIRKinect";
 
-		//Static Constants
-		private static const DEVICE_STATUS:String = "deviceStatus";
-		private static const SKELETON_FRAME:String = "skeletonFrame";
-		private static const RGB_FRAME:String = "RGBFrame";
-		private static const DEPTH_FRAME:String = "depthFrame";
-		private static const CONNECTION_ERROR:String = "connectionError";
-		private static const EXTENSION_ID:String = 'com.as3nui.extensions.AIRKinect';
+		/**
+		 * Dispatched from Native Code when Deivce Status Changes
+		 * Will be paired with DEVICE_STATUS_RECONNECTED or DEVICE_STATUS_DISCONNECTED
+		 */
+		private static const DEVICE_STATUS:String 				= "deviceStatus";
 
-		//Device Status Constants
-		private const DEVICE_STATUS_CONNECTED:String 		= "connected";
-		private const DEVICE_STATUS_DISCONNECTED:String 	= "disconnected";
+		/**
+		 * Dispatched from Native code when a new SkeletonFrame is available
+		 */
+		private static const SKELETON_FRAME:String 				= "skeletonFrame";
 
+		/**
+		 * Dispatched from Native code when a new RGBFrame is available
+		 */
+		private static const RGB_FRAME:String 					= "RGBFrame";
+
+		/**
+		 * Dispatched from Native code when a new Depth Frame is available
+		 */
+		private static const DEPTH_FRAME:String 				= "depthFrame";
+
+		/**
+		 * Dispatched as type in a Device Status event, indicates the kinect has been reconnected.
+		 */
+		private static const DEVICE_STATUS_RECONNECTED:String 	= "reconnected";
+
+		/**
+		 * Dispatched as type in a Device Status event, indicates the kinect has been disconnected.
+		 */
+		private static const DEVICE_STATUS_DISCONNECTED:String 	= "disconnected";
+
+		/**
+		 * Boolean indicator determining if a instance of the kinect is currently running
+		 */
 		private static var _KINECT_RUNNING:Boolean;
 
 		//----------------------------------
@@ -56,74 +76,128 @@ package com.as3nui.nativeExtensions.kinect {
 			return _instance;
 		}
 
-		public static function initialize(flags:uint = NUI_INITIALIZE_FLAG_USES_SKELETON, rgbResolution:uint = NUI_IMAGE_RESOLUTION_640x480, depthResolution:uint = NUI_IMAGE_RESOLUTION_320x240):Boolean {
+		/**
+		 * @see AIRKinect.initialize
+		 */
+		public static function initialize(flags:uint = AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_SKELETON, rgbResolution:uint = AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480, depthResolution:uint = AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240):Boolean {
 			return instance.initialize(flags, rgbResolution, depthResolution);
 		}
 
+		/**
+		 * @see AIRKinect.shutdown
+		 */
 		public static function shutdown():void {
 			instance.shutdown();
 		}
 
+		/**
+		 * @see AIRKinect.setKinectAngle
+		 */
 		public static function setKinectAngle(angle:int):void {
 			instance.setKinectAngle(angle);
 		}
 
+		/**
+		 * @see AIRKinect.getKinectAngle
+		 */
 		public static function getKinectAngle():int {
 			return instance.getKinectAngle();
 		}
 
+		/**
+		 * @see AIRKinect.setTransformSmoothingParameters
+		 */
 		public static function setTransformSmoothingParameters(nuiTransformSmoothingParameters:NUITransformSmoothParameters):Boolean {
 			return instance.setTransformSmoothingParameters(nuiTransformSmoothingParameters);
 		}
 
+		/**
+		 * @see AIRKinect.getTransformSmoothingParameters
+		 */
 		public static function getTransformSmoothingParameters():NUITransformSmoothParameters {
 			return instance.getTransformSmoothingParameters();
 		}
 
+		/**
+		 * @see AIRKinect.rgbEnabled
+		 */
 		public static function get rgbEnabled():Boolean {
 			return instance.rgbEnabled;
 		}
 
+		/**
+		 * @see AIRKinect.depthEnabled
+		 */
 		public static function get depthEnabled():Boolean {
 			return instance.depthEnabled;
 		}
-		
+
+		/**
+		 * @see AIRKinect.isPlayerIndexEnabled
+		 */
 		public static function get isPlayerIndexEnabled():Boolean {
 			return instance.isPlayerIndexEnabled;
 		}
 
+		/**
+		 * @see AIRKinect.skeletonEnabled
+		 */
 		public static function get skeletonEnabled():Boolean {
 			return instance.skeletonEnabled;
 		}
 
+		/**
+		 * @see EventDispatcher.addEventListener
+		 */
 		public static function addEventListener(type:String, listener:Function, useWeakReference:Boolean = false):void {
 			instance.addEventListener(type, listener, false, 0, useWeakReference);
 		}
 
+		/**
+		 * @see EventDispatcher.removeEventListener
+		 */
 		public static function removeEventListener(type:String, listener:Function):void {
 			instance.removeEventListener(type, listener);
 		}
 
+		/**
+		 * @see EventDispatcher.hasEventListener
+		 */
 		public static function hasEventListener(type:String):Boolean {
 			return instance.hasEventListener(type);
 		}
 
+		/**
+		 * @see EventDispatcher.willTrigger
+		 */
 		public static function willTrigger(type:String):Boolean {
 			return instance.willTrigger(type);
 		}
 
+		/**
+		 * @see AIRKinect.KINECT_RUNNING
+		 */
 		public static function get KINECT_RUNNING():Boolean {
 			return _KINECT_RUNNING;
 		}
 
+		/**
+		 * @see AIRKinect.KINECT_RUNNING
+		 */
 		public static function set KINECT_RUNNING(value:Boolean):void {
 			_KINECT_RUNNING = value;
 		}
 
+		/**
+		 * @see AIRKinect.rgbSize
+		 */
 		public static function get rgbSize():Point {
 			return instance.rgbSize;
 		}
 
+		/**
+		 * @see AIRKinect.depthSize
+		 */
 		public static function get depthSize():Point {
 			return instance.depthSize;
 		}
@@ -132,31 +206,76 @@ package com.as3nui.nativeExtensions.kinect {
 		// Begin Instance
 		//----------------------------------
 
-		//----------------------------------
-		// Instance Variables
-		//----------------------------------
+		/**
+		 * Reference to the Native Code extension
+		 */
 		private var _extCtx:ExtensionContext;
-		//Smoothing Params
+
+		/**
+		 * Skeleton Frame Smoothing Parameters
+		 */
 		private var _nuiTransformSmoothingParameters:NUITransformSmoothParameters;
 
-		//Camera Image Variables
+		/**
+		 * Byte Array of current pixel data for RGB frame
+		 */
 		private var _rgbFrame:ByteArray;
+		/**
+		 * BitmapData for current RGB Frame
+		 */
 		private var _rgbImage:BitmapData;
 
+		/**
+		 *  Byte Array of current pixel data for Depth Frame
+		 */
 		private var _depthFrame:ByteArray;
+
+		/**
+		 * Bitmap Data for current Depth Frame
+		 */
 		private var _depthImage:BitmapData;
+
+		/**
+		 * ByteArray containing Depth information per pixel.
+		 * Format is x,y,z where each is a Unsigned Short.
+		 */
 		private var _depthPoints:ByteArray;
 
-		//flags passed into c
+		/**
+		 * Flags to be passed to native kinect code for initalization.
+		 * @see AIRKinectFlags
+		 */
 		private var _flags:ByteArray;
+
+		/**
+		 * Resolution for the RGB camera output
+		 * @see AIRKinectCameraResolutions
+		 */
 		private var _rgbResolution:uint;
+
+		/**
+		 * Resolution for the Depth camera output
+		 * @see AIRKinectCameraResolutions
+		 */
 		private var _depthResolution:uint;
+
+		/**
+		 * Provides a point container for Width (x) and Height (y) of a requested Resolution
+		 * @see AIRKinect.getResolutionToSize
+		 * @see AIRKinectCameraResolutions
+		 */
 		private var _resolutionSize:Point;
 
+		
 		public function AIRKinect() {
 			createContext();
 		}
 
+		/**
+		 * Creates a instance of the Native Code extension, adds listeners to this extension and calls the init function.
+		 * this will initialize the DeviceStatusCallback for disconnected and reconnected events
+		 * this also set default smoothing parameters for skeleton frames
+		 */
 		public function createContext():void {
 			_extCtx = ExtensionContext.createExtensionContext(EXTENSION_ID, null);
 			if (_extCtx != null) {
@@ -167,7 +286,24 @@ package com.as3nui.nativeExtensions.kinect {
 			}
 		}
 
-		public function initialize(kinectFlags:uint = NUI_INITIALIZE_FLAG_USES_SKELETON, rgbResolution:uint = NUI_IMAGE_RESOLUTION_640x480, depthResolution:uint = NUI_IMAGE_RESOLUTION_320x240):Boolean {
+		/**
+		 * Attempts to initialize the Kinect and starts any combination of Skeleton, RGB, and depth tracking.
+		 * @param kinectFlags (optional)		Flags informing the Kinect on which data is required. Default is Skeleton only. @see AIRKinectFlags
+		 * @param rgbResolution (optional)		Sets the resolution of the RGB camera. Only used if the AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_COLOR is used
+		 * 										Valid RGB Resolutions are:
+		 * 											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480
+		 * 											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_1280x1024
+		 * @param depthResolution (optional)	Sets the resolution of the Depth camera. Only used if the AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_DEPTH or AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX is used.
+		 * 										Valid Depth Resolutions in NUI_INITIALIZE_FLAG_USES_DEPTH mode
+		 * 											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240
+		 * 										Valid Depth Resolutions in NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX mode
+		 * 											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_80x60
+		 *											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240
+		 *											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480
+		 *
+		 * @return								Boolean stating whether the Kinect was started successfully or not.
+		 */
+		public function initialize(kinectFlags:uint = AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_SKELETON, rgbResolution:uint = AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480, depthResolution:uint = AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240):Boolean {
 			if (_KINECT_RUNNING) throw new Error("Only one instance of the Kinect maybe run at a time");
 
 			_flags = new ByteArray();
@@ -202,11 +338,17 @@ package com.as3nui.nativeExtensions.kinect {
 			return true;
 		}
 
+		/**
+		 * Completely shuts down the Kinect cleaning up the Native Extension.
+		 */
 		public function shutdown():void {
 			cleanupNativeExtension();
 			cleanupASExtension();
 		}
 
+		/**
+		 * Cleans up the Native Extension side, calling Kinect Stop to dispose of all memory. 
+		 */
 		private function cleanupNativeExtension():void {
 			if (_extCtx) {
 				_extCtx.call("kinectStop");
@@ -216,6 +358,9 @@ package com.as3nui.nativeExtensions.kinect {
 			}
 		}
 
+		/**
+		 * Cleansup the AS side of the extension clearing byte arrays and BitmapData
+		 */
 		private function cleanupASExtension():void {
 			_KINECT_RUNNING = false;
 			_flags = new ByteArray();
@@ -235,17 +380,25 @@ package com.as3nui.nativeExtensions.kinect {
 			}
 		}
 
+		/**
+		 * Called when the Kinect is disconnected, causes the AS part of the extension to clean up
+		 */
 		private function onDisconnected():void {
 			cleanupASExtension();
 		}
 
-		//----------------------------------
-		// Public functions 
-		//----------------------------------
+		/**
+		 * Sets the Angle, in degrees, of the Kinect. Minimum angle is -27 Maximum is 27
+		 * @param angle		Desired angle to move to
+		 */
 		public function setKinectAngle(angle:int):void {
 			_extCtx.call('setKinectAngle', angle);
 		}
 
+		/**
+		 * Returns the current Angle of the Kinect
+		 * @return			Angle in Degrees
+		 */
 		public function getKinectAngle():int {
 			if (_extCtx != null) {
 				return _extCtx.call('getKinectAngle') as int;
@@ -253,56 +406,88 @@ package com.as3nui.nativeExtensions.kinect {
 			return NaN;
 		}
 
+		/**
+		 * Sets the Smoothing Parameters for Skeleton Frames.
+		 * @param nuiTransformSmoothingParameters		Smoothing Object to use to smooth Skeleton Frames
+		 * @return			Boolean of success
+		 */
 		public function setTransformSmoothingParameters(nuiTransformSmoothingParameters:NUITransformSmoothParameters):Boolean {
 			_nuiTransformSmoothingParameters = nuiTransformSmoothingParameters;
 			return _extCtx.call('setTransformSmoothingParameters', _nuiTransformSmoothingParameters);
 		}
 
+		/**
+		 * Retrieves the current Smoothing Parameters from the Native side
+		 * @return	NUITransformSmoothParameters with current smoothing data
+		 */
 		public function getTransformSmoothingParameters():NUITransformSmoothParameters {
 			return _nuiTransformSmoothingParameters;
 		}
 
+		/**
+		 * Boolean, based on Initialization flags, of RGB Camera activation
+		 */
 		public function get rgbEnabled():Boolean {
-			return (_flags[0] & NUI_INITIALIZE_FLAG_USES_COLOR) != 0;
+			return (_flags[0] & AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_COLOR) != 0;
 		}
 
+		/**
+		 * Boolean, based on Initialization flags, of Depth Camera activation
+		 */
 		public function get depthEnabled():Boolean {
-			return (((_flags[0] & NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX) != 0) || ((_flags[0] & NUI_INITIALIZE_FLAG_USES_DEPTH) != 0));
+			return (((_flags[0] & AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX) != 0) || ((_flags[0] & AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_DEPTH) != 0));
 		}
 
+		/**
+		 * Boolean, based on Initialization flags, of Player Index activation
+		 */
 		public function get isPlayerIndexEnabled():Boolean {
-			return ((_flags[0] & NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX) != 0)
+			return ((_flags[0] & AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX) != 0)
 		}
 
+		/**
+		 * Boolean, based on Initialization flags, of Skeleton Frame activation
+		 */
 		public function get skeletonEnabled():Boolean {
-			return (_flags[0] & NUI_INITIALIZE_FLAG_USES_SKELETON) != 0;
+			return (_flags[0] & AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_SKELETON) != 0;
 		}
 
+		/**
+		 * Helper function to get Resolution of the RGB image
+		 */
 		public function get rgbSize():Point {
 			return getResolutionToSize(_rgbResolution);
 		}
 
+		/**
+		 * Helper function to get Resolution of Depth Image
+		 */
 		public function get depthSize():Point {
 			return getResolutionToSize(_depthResolution);
 		}
 
+		/**
+		 * Utility function to convert AIRKinectCameraResolutions to Width (x) & Height (y)
+		 * @param res		AIRKinectCameraResolutions in which to convert
+		 * @return			Point with format of x as width and y as height
+		 */
 		private function getResolutionToSize(res:uint):Point {
 			if (_resolutionSize == null) _resolutionSize = new Point();
 
 			switch (res) {
-				case NUI_IMAGE_RESOLUTION_80x60:
+				case AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_80x60:
 					_resolutionSize.x = 80;
 					_resolutionSize.y = 60;
 					break;
-				case NUI_IMAGE_RESOLUTION_320x240:
+				case AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240:
 					_resolutionSize.x = 320;
 					_resolutionSize.y = 240;
 					break;
-				case NUI_IMAGE_RESOLUTION_640x480:
+				case AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480:
 					_resolutionSize.x = 640;
 					_resolutionSize.y = 480;
 					break;
-				case NUI_IMAGE_RESOLUTION_1280x1024 :
+				case AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_1280x1024 :
 					_resolutionSize.x = 1280;
 					_resolutionSize.y = 1024;
 					break;
@@ -314,23 +499,25 @@ package com.as3nui.nativeExtensions.kinect {
 			return _resolutionSize;
 		}
 
-		//----------------------------------
-		// Private Functions
-		//----------------------------------
+		/**
+		 * Event Listener for Native Code. 
+		 * @param event			Native Dispatched Event
+		 */
 		private function onStatus(event:StatusEvent):void {
 			switch (event.code) {
+				//Device Status Events are redispatched. In the case of a disconnected the AS side of the extension is cleaned up
 				case DEVICE_STATUS:
-//						trace("Device Status :: " + event.level);
 						switch(event.level){
 							case DEVICE_STATUS_DISCONNECTED:
 								onDisconnected();
 								this.dispatchEvent(new DeviceStatusEvent(DeviceStatusEvent.DISCONNECTED));
 								break;
-							case DEVICE_STATUS_CONNECTED:
+							case DEVICE_STATUS_RECONNECTED:
 								this.dispatchEvent(new DeviceStatusEvent(DeviceStatusEvent.RECONNECTED));
 								break;
 						}
 					break;
+				//Skeleton Frame events are redispatched
 				case SKELETON_FRAME:
 					try {
 						var currentSkeleton:SkeletonFrame = _extCtx.call('getSkeletonFrameData') as SkeletonFrame;
@@ -339,6 +526,7 @@ package com.as3nui.nativeExtensions.kinect {
 						trace("Skeleton Frame Error :: " + e.message);
 					}
 					break;
+				//RGB frame events are written into Bitmap Data and dispatched
 				case RGB_FRAME:
 					try {
 						_extCtx.call('getRGBFrame', _rgbFrame);
@@ -350,6 +538,7 @@ package com.as3nui.nativeExtensions.kinect {
 						trace("RGB Image Error :: " + e.message);
 					}
 					break;
+				//Depth Frame events are written into Bitmap Data. Point are property positioned and set to proper Endian, then dispatched
 				case DEPTH_FRAME:
 					try {
 						_extCtx.call('getDepthFrame', _depthFrame, _depthPoints);

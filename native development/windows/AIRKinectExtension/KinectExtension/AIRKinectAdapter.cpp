@@ -150,7 +150,7 @@ void AIRKinectAdapter::onDeviceStatus(const NuiStatusData *pStatusData){
 	const uint8_t* level = (const uint8_t*) "unknown";
 	
 	if (SUCCEEDED(pStatusData->hrStatus)) {
-		level = (const uint8_t*) "connected";
+		level = (const uint8_t*) "reconnected";
 	}else{
 		dispose();
 		level = (const uint8_t*) "disconnected";

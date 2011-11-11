@@ -6,6 +6,8 @@
  */
 package com.as3nui.airkinect.demos {
 	import com.as3nui.nativeExtensions.kinect.AIRKinect;
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectCameraResolutions;
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectFlags;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.data.SkeletonPosition;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
@@ -55,16 +57,17 @@ package com.as3nui.airkinect.demos {
 		}
 
 		private function initDemo():void {
+			// Possible Flags for Kinect
 			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON;
 			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR;
 			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX;
 			//_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX;
-			_flags = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR | AIRKinect.NUI_INITIALIZE_FLAG_USES_DEPTH;
+			_flags = AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_COLOR | AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_DEPTH;
 			initKinect();
 		}
 
 		private function initKinect():void {
-			if(!AIRKinect.initialize(_flags, AIRKinect.NUI_IMAGE_RESOLUTION_1280x1024, AIRKinect.NUI_IMAGE_RESOLUTION_640x480)){
+			if(!AIRKinect.initialize(_flags, AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480, AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240)){
 			//if(!AIRKinect.initialize(_flags)){
 				trace("Kinect Failed");
 			}else{
@@ -74,6 +77,8 @@ package com.as3nui.airkinect.demos {
 		}
 
 		private function onKinectLoaded():void {
+
+			//RGB Camera Setup
 			if (AIRKinect.rgbEnabled) {
 				_rgbImage = new Bitmap(new BitmapData(AIRKinect.rgbSize.x, AIRKinect.rgbSize.y, true, 0xffff0000));
 				_rgbImage.scaleX = _rgbImage.scaleY = .5;
@@ -81,12 +86,14 @@ package com.as3nui.airkinect.demos {
 				AIRKinect.addEventListener(CameraFrameEvent.RGB, onRGBFrame);
 			}
 
+			//Depth Camera Setup
 			if (AIRKinect.depthEnabled) {
 				_depthImage = new Bitmap(new BitmapData(AIRKinect.depthSize.x, AIRKinect.depthSize.y, true, 0xffff0000));
 				this.addChild(_depthImage);
 				AIRKinect.addEventListener(CameraFrameEvent.DEPTH, onDepthFrame);
 			}
 
+			//Skeleton Tracking Setup
 			if (AIRKinect.skeletonEnabled) {
 				_skeletonsSprite = new Sprite();
 				this.addChild(_skeletonsSprite);
@@ -94,6 +101,7 @@ package com.as3nui.airkinect.demos {
 				AIRKinect.addEventListener(SkeletonFrameEvent.UPDATE, onSkeletonFrame);
 			}
 
+			//Disconnect/Reconnect Listeners
 			AIRKinect.removeEventListener(DeviceStatusEvent.RECONNECTED, onKinectConnected);
 			AIRKinect.addEventListener(DeviceStatusEvent.DISCONNECTED, onKinectDisconnected);
 
@@ -103,6 +111,9 @@ package com.as3nui.airkinect.demos {
 			onStageResize(null);
 		}
 
+		//----------------------------------
+		// Disconnection/Reconnection
+		//----------------------------------
 		private function onKinectConnected(e:DeviceStatusEvent):void {
 			initKinect();
 		}
@@ -136,6 +147,9 @@ package com.as3nui.airkinect.demos {
 			NativeApplication.nativeApplication.removeEventListener(Event.EXITING, onExiting);
 		}
 
+		//----------------------------------
+		// Keyboard Debugging
+		//----------------------------------
 		private function onKeyUp(event:KeyboardEvent):void {
 			switch (event.keyCode) {
 				case Keyboard.S:
@@ -150,18 +164,22 @@ package com.as3nui.airkinect.demos {
 			}
 		}
 
+		//App exiting clean up Kinect
 		private function onExiting(event:Event):void {
 			AIRKinect.shutdown();
 		}
 
+		//show RGB Image
 		private function onRGBFrame(e:CameraFrameEvent):void {
 			_rgbImage.bitmapData = e.frame;
 		}
 
+		//Show Depth Image
 		private function onDepthFrame(e:CameraFrameEvent):void {
 			_depthImage.bitmapData = e.frame;
 		}
 
+		//Store Skeleton
 		private function onSkeletonFrame(e:SkeletonFrameEvent):void {
 			_currentSkeletons = new <SkeletonPosition>[];
 			var skeletonFrame:SkeletonFrame = e.skeletonFrame;
@@ -173,10 +191,12 @@ package com.as3nui.airkinect.demos {
 			}
 		}
 
+		//Enterframe
 		private function onEnterFrame(event:Event):void {
 			drawSkeletons();
 		}
 
+		//Loop through all skeletons and all elements and draw them. Each element will be a sprite
 		private function drawSkeletons():void {
 			while (_skeletonsSprite.numChildren > 0) _skeletonsSprite.removeChildAt(0);
 			if (!AIRKinect.skeletonEnabled) return;
