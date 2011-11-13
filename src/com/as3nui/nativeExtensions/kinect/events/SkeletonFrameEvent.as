@@ -3,6 +3,9 @@ package com.as3nui.nativeExtensions.kinect.events {
 
 	import flash.events.Event;
 
+	/**
+	 * Dispatched containing a new SkeletonFrame.
+	 */
 	public class SkeletonFrameEvent extends Event {
 
 		/**
