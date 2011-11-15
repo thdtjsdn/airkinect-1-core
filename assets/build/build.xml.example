@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="AIRKinect Extension">
+<project name="AIRKinect">
 	<property file="build.properties"/>
 	<taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar" />
 	<property name="Flex.ADT" value="${FLEX_HOME}\lib\adt.jar"/>
 
 	<!-- Folder Properties -->
-	<dirname property="AIRKinect.BUILD_ROOT" file="${ant.file.AIRKinect Extension}"/>
+	<dirname property="AIRKinect.BUILD_ROOT" file="${ant.file.AIRKinect}"/>
 	<property name="AIRKinect.MODULE_ROOT" value="${AIRKinect.BUILD_ROOT}\..\.."/>
 
 	<!-- Native Extension Properties -->
