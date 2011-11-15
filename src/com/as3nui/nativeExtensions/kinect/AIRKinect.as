@@ -22,6 +22,19 @@ package com.as3nui.nativeExtensions.kinect {
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 
+	/**
+	 * Main Singleton class providing access to Kinect native context.
+	 * Initialization is done through the initialize function code, optional flags are passed in to enable different features.
+	 * <p>
+	 * In this Example Skeleton and Color Camera tracking is enabled.
+	 * <p>
+	 * <code>
+	 *  	var flags:uint = AIRKinect.NUI_INITIALIZE_FLAG_USES_SKELETON | AIRKinect.NUI_INITIALIZE_FLAG_USES_COLOR
+	 *		AIRKinect.initialize(flags);
+	 * </code>
+	 * </p>
+	 * </p>
+	 */
 	public class AIRKinect extends EventDispatcher {
 
 		/**
@@ -291,16 +304,21 @@ package com.as3nui.nativeExtensions.kinect {
 		 * @param kinectFlags (optional)		Flags informing the Kinect on which data is required. Default is Skeleton only. @see AIRKinectFlags
 		 * @param rgbResolution (optional)		Sets the resolution of the RGB camera. Only used if the AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_COLOR is used
 		 * 										Valid RGB Resolutions are:
-		 * 											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480
-		 * 											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_1280x1024
+		 * 											<ul>
+		 * 												<li>AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480</li>
+		 * 												<li>AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_1280x1024</li>
+		 * 											</ul>
 		 * @param depthResolution (optional)	Sets the resolution of the Depth camera. Only used if the AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_DEPTH or AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX is used.
 		 * 										Valid Depth Resolutions in NUI_INITIALIZE_FLAG_USES_DEPTH mode
-		 * 											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240
+		 * 											<ul>
+		 * 												<li>AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240</li>
+		 * 											</ul>
 		 * 										Valid Depth Resolutions in NUI_INITIALIZE_FLAG_USES_DEPTH_AND_PLAYER_INDEX mode
-		 * 											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_80x60
-		 *											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240
-		 *											AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480
-		 *
+		 * 											<ul>
+		 * 												<li>AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_80x60</li>
+		 *												<li>AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240</li>
+		 *												<li>AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480</li>
+		 *											</ul>
 		 * @return								Boolean stating whether the Kinect was started successfully or not.
 		 */
 		public function initialize(kinectFlags:uint = AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_SKELETON, rgbResolution:uint = AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_640x480, depthResolution:uint = AIRKinectCameraResolutions.NUI_IMAGE_RESOLUTION_320x240):Boolean {

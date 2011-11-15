@@ -3,6 +3,10 @@ package com.as3nui.nativeExtensions.kinect.events {
 	import flash.events.Event;
 	import flash.utils.ByteArray;
 
+	/**
+	 * Dispatched when any camera frame is updated could be either Depth or RGB Data.
+	 * In the case of Depth without player the data properly will container per pixel depth data, otherwise will be null.
+	 */
 	public class CameraFrameEvent extends Event {
 		/**
 		 * Dispatched with new RGB frame from Kinect Camera

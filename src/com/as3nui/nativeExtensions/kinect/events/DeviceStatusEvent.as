@@ -1,6 +1,10 @@
 package com.as3nui.nativeExtensions.kinect.events {
 	import flash.events.Event;
 
+	/**
+	 * Dispatched anytime the Kinect triggers a Device Status Event.
+	 * This could be disconnection or reconnection of the power or USB cable.
+	 */
 	public class DeviceStatusEvent extends Event {
 		/**
 		 * Dispatched when Kinect is disconnected from the system

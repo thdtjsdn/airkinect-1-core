@@ -219,11 +219,13 @@ package com.as3nui.nativeExtensions.kinect.data {
 
 		/**
 		 * Scales a Elements position vector by any other vector.
-		 * For example to scale to fit the stage one would use the following
-		 * <code>
-		 * 		var scaler:Vector3D = new Vector3D(stage.stageWidth, stage.stageHeight, KinectMaxDepthInFlash);
-		 * 		var element:Vector3D = skeleton.getElementScaled(i, scaler);
-		 * </code>
+		 * <p>
+		 *     For example to scale to fit the stage one would use the following
+		 * 		<p><code>
+		 * 			var scaler:Vector3D = new Vector3D(stage.stageWidth, stage.stageHeight, KinectMaxDepthInFlash);
+		 * 			var element:Vector3D = skeleton.getElementScaled(i, scaler);
+		 * 		</code></p>
+		 * </p>
 		 * @param index		Element to get scaled position of
 		 * @param scale		Vector3D to scale by
 		 * @return

@@ -5,6 +5,10 @@
  * Time: 11:04 AM
  */
 package com.as3nui.nativeExtensions.kinect.data {
+
+	/**
+	 * Camera Constants from the Kinect SDK to provide Focal Length based position translations.
+	 */
 	public class AIRKinectCameraConstants {
 		public static const NUI_CAMERA_DEPTH_NOMINAL_FOCAL_LENGTH_IN_PIXELS:Number 			= 285.63;    // Based on 320x240 pixel size.
 		public static const NUI_CAMERA_DEPTH_NOMINAL_INVERSE_FOCAL_LENGTH_IN_PIXELS:Number 	= 3.501e-3;  // (1/NUI_CAMERA_DEPTH_NOMINAL_FOCAL_LENGTH_IN_PIXELS)
