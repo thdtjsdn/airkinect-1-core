@@ -12,7 +12,7 @@ package com.as3nui.nativeExtensions.kinect {
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
 	import com.as3nui.nativeExtensions.kinect.events.DeviceStatusEvent;
 	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
-
+	
 	import flash.display.BitmapData;
 	import flash.events.EventDispatcher;
 	import flash.events.StatusEvent;
@@ -20,7 +20,9 @@ package com.as3nui.nativeExtensions.kinect {
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
-	import flash.utils.Endian;
+	import flash.utils.Endian;n
+	import flash.desktop.NativeApplication;
+	import flash.events.Event;
 
 	/**
 	 * Main Singleton class providing access to Kinect native context.
@@ -352,14 +354,16 @@ package com.as3nui.nativeExtensions.kinect {
 					_depthPoints = new ByteArray();
 				}
 			}
-
+			//Add standard to shutdown Kinect when the native application window is closed
+			NativeApplication.nativeApplication.addEventListener(Event.EXITING, shutdown);
 			return true;
 		}
 
 		/**
 		 * Completely shuts down the Kinect cleaning up the Native Extension.
 		 */
-		public function shutdown():void {
+		public function shutdown(event:Event=null):void {
+			NativeApplication.nativeApplication.removeEventListener(Event.EXITING, shutdown);
 			cleanupNativeExtension();
 			cleanupASExtension();
 		}
