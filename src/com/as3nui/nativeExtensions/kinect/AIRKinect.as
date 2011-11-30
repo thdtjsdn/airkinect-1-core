@@ -369,7 +369,6 @@ package com.as3nui.nativeExtensions.kinect {
 			}
 			//Add standard to shutdown Kinect when the native application window is closed
 			NativeApplication.nativeApplication.addEventListener(Event.EXITING, shutdown);
-			return true;
 		}
 
 		/**
