@@ -20,7 +20,7 @@ package com.as3nui.nativeExtensions.kinect {
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
-	import flash.utils.Endian;n
+	import flash.utils.Endian;
 	import flash.desktop.NativeApplication;
 	import flash.events.Event;
 
@@ -64,6 +64,11 @@ package com.as3nui.nativeExtensions.kinect {
 		 * Dispatched from Native code when a new Depth Frame is available
 		 */
 		private static const DEPTH_FRAME:String 				= "depthFrame";
+		
+		/**
+		 * Dispatched as type in a Device Status event, indicates the kinect has been started.
+		 */
+		private static const DEVICE_STATUS_STARTED:String 	= "started";
 
 		/**
 		 * Dispatched as type in a Device Status event, indicates the kinect has been reconnected.
@@ -338,13 +343,21 @@ package com.as3nui.nativeExtensions.kinect {
 				shutdown();
 				return false;
 			}
-
+			
+			return true;
+		}
+		
+		/**
+		 * Called when the kinect has started
+		 */ 
+		private function onStarted():void{
+			trace("started");
 			_KINECT_RUNNING = true;
 			if (rgbEnabled) {
 				_rgbFrame = new ByteArray();
 				_rgbImage = new BitmapData(rgbSize.x, rgbSize.y, false);
 			}
-
+			
 			if (depthEnabled) {
 				_depthFrame = new ByteArray();
 				_depthImage = new BitmapData(depthSize.x, depthSize.y, false);
@@ -529,7 +542,12 @@ package com.as3nui.nativeExtensions.kinect {
 			switch (event.code) {
 				//Device Status Events are redispatched. In the case of a disconnected the AS side of the extension is cleaned up
 				case DEVICE_STATUS:
-						switch(event.level){
+						switch(event.level)
+						{
+							case DEVICE_STATUS_STARTED:
+								onStarted();
+								this.dispatchEvent(new DeviceStatusEvent(DeviceStatusEvent.STARTED));
+								break;
 							case DEVICE_STATUS_DISCONNECTED:
 								onDisconnected();
 								this.dispatchEvent(new DeviceStatusEvent(DeviceStatusEvent.DISCONNECTED));

@@ -7,6 +7,11 @@ package com.as3nui.nativeExtensions.kinect.events {
 	 */
 	public class DeviceStatusEvent extends Event {
 		/**
+		 * Dispatched when Kinect is started and ready to use
+		 */
+		public static const STARTED:String 	= "started";
+		
+		/**
 		 * Dispatched when Kinect is disconnected from the system
 		 */
 		public static const DISCONNECTED:String 	= "disconnected";
