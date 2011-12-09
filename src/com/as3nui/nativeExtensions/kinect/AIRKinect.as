@@ -286,6 +286,9 @@ package com.as3nui.nativeExtensions.kinect {
 		 */
 		private var _resolutionSize:Point;
 
+		//Determines if a physical Kinect has been initalized.
+		internal var _isPhysicalKinectInit:Boolean;
+
 		
 		public function AIRKinect() {
 			createContext();
@@ -298,12 +301,18 @@ package com.as3nui.nativeExtensions.kinect {
 		 */
 		public function createContext():void {
 			_extCtx = ExtensionContext.createExtensionContext(EXTENSION_ID, null);
-			if (_extCtx != null) {
-				_extCtx.addEventListener(StatusEvent.STATUS, onStatus);
+			_extCtx.addEventListener(StatusEvent.STATUS, onStatus);
+		}
+
+		public function initContext():Boolean {
+			if(_isPhysicalKinectInit) return true;
+
+			try {
 				_extCtx.call("init");
-			} else {
-				throw new Error("Error while instantiating Kinect Extension");
-			}
+				return true;
+			}catch(e:Error){}
+
+			return false;
 		}
 
 		/**
@@ -338,13 +347,16 @@ package com.as3nui.nativeExtensions.kinect {
 			_depthResolution = depthResolution;
 
 			if (_extCtx == null) createContext();
+			_isPhysicalKinectInit = initContext();
 
-			if (!_extCtx.call("kinectStart", kinectFlags, rgbResolution, depthResolution)) {
-				shutdown();
-				return false;
+			if(_isPhysicalKinectInit) {
+				if (!_extCtx.call("kinectStart", kinectFlags, rgbResolution, depthResolution)) {
+					shutdown();
+					return false;
+				}
 			}
-			
-			return true;
+
+			return _isPhysicalKinectInit;
 		}
 		
 		/**
@@ -385,7 +397,9 @@ package com.as3nui.nativeExtensions.kinect {
 		 */
 		private function cleanupNativeExtension():void {
 			if (_extCtx) {
-				_extCtx.call("kinectStop");
+				if(_isPhysicalKinectInit) _extCtx.call("kinectStop");
+
+				_isPhysicalKinectInit = false;
 				_extCtx.removeEventListener(StatusEvent.STATUS, onStatus);
 				_extCtx.dispose();
 				_extCtx = null;
@@ -426,7 +440,7 @@ package com.as3nui.nativeExtensions.kinect {
 		 * @param angle		Desired angle to move to
 		 */
 		public function setKinectAngle(angle:int):void {
-			_extCtx.call('setKinectAngle', angle);
+			if(_isPhysicalKinectInit) _extCtx.call('setKinectAngle', angle);
 		}
 
 		/**
@@ -434,10 +448,8 @@ package com.as3nui.nativeExtensions.kinect {
 		 * @return			Angle in Degrees
 		 */
 		public function getKinectAngle():int {
-			if (_extCtx != null) {
-				return _extCtx.call('getKinectAngle') as int;
-			}
-			return NaN;
+			if(!_isPhysicalKinectInit) return NaN;
+			return _extCtx.call('getKinectAngle') as int;
 		}
 
 		/**
@@ -446,6 +458,8 @@ package com.as3nui.nativeExtensions.kinect {
 		 * @return			Boolean of success
 		 */
 		public function setTransformSmoothingParameters(nuiTransformSmoothingParameters:NUITransformSmoothParameters):Boolean {
+			if(!_isPhysicalKinectInit) return false;
+
 			_nuiTransformSmoothingParameters = nuiTransformSmoothingParameters;
 			return _extCtx.call('setTransformSmoothingParameters', _nuiTransformSmoothingParameters);
 		}
@@ -558,41 +572,47 @@ package com.as3nui.nativeExtensions.kinect {
 					break;
 				//Skeleton Frame events are redispatched
 				case SKELETON_FRAME:
-					try {
-						var currentSkeleton:SkeletonFrame = _extCtx.call('getSkeletonFrameData') as SkeletonFrame;
-						this.dispatchEvent(new SkeletonFrameEvent(currentSkeleton));
-					} catch(e:Error) {
-						trace("Skeleton Frame Error :: " + e.message);
+					if(_isPhysicalKinectInit) {
+						try {
+							var currentSkeleton:SkeletonFrame = _extCtx.call('getSkeletonFrameData') as SkeletonFrame;
+							this.dispatchEvent(new SkeletonFrameEvent(currentSkeleton));
+						} catch(e:Error) {
+							trace("Skeleton Frame Error :: " + e.message);
+						}
 					}
 					break;
 				//RGB frame events are written into Bitmap Data and dispatched
 				case RGB_FRAME:
-					try {
-						_extCtx.call('getRGBFrame', _rgbFrame);
-						_rgbFrame.position = 0;
-						_rgbFrame.endian = Endian.LITTLE_ENDIAN;
-						_rgbImage.setPixels(new Rectangle(0, 0, _rgbImage.width, _rgbImage.height), _rgbFrame);
-						this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.RGB, _rgbImage.clone()));
-					} catch(e:Error) {
-						trace("RGB Image Error :: " + e.message);
+					if(_isPhysicalKinectInit) {
+						try {
+							_extCtx.call('getRGBFrame', _rgbFrame);
+							_rgbFrame.position = 0;
+							_rgbFrame.endian = Endian.LITTLE_ENDIAN;
+							_rgbImage.setPixels(new Rectangle(0, 0, _rgbImage.width, _rgbImage.height), _rgbFrame);
+							this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.RGB, _rgbImage.clone()));
+						} catch(e:Error) {
+							trace("RGB Image Error :: " + e.message);
+						}
 					}
 					break;
 				//Depth Frame events are written into Bitmap Data. Point are property positioned and set to proper Endian, then dispatched
 				case DEPTH_FRAME:
-					try {
-						_extCtx.call('getDepthFrame', _depthFrame, _depthPoints);
-						_depthFrame.position = 0;
-						_depthFrame.endian = Endian.LITTLE_ENDIAN;
+					if(_isPhysicalKinectInit) {
+						try {
+							_extCtx.call('getDepthFrame', _depthFrame, _depthPoints);
+							_depthFrame.position = 0;
+							_depthFrame.endian = Endian.LITTLE_ENDIAN;
 
-						if(_depthPoints){
-							_depthPoints.position = 0;
-							_depthPoints.endian = Endian.LITTLE_ENDIAN;
+							if(_depthPoints){
+								_depthPoints.position = 0;
+								_depthPoints.endian = Endian.LITTLE_ENDIAN;
+							}
+
+							_depthImage.setPixels(new Rectangle(0, 0, _depthImage.width, _depthImage.height), _depthFrame);
+							this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage.clone(), _depthPoints));
+						} catch(e:Error) {
+							trace("Depth Image Error :: " + e.message);
 						}
-
-						_depthImage.setPixels(new Rectangle(0, 0, _depthImage.width, _depthImage.height), _depthFrame);
-						this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage.clone(), _depthPoints));
-					} catch(e:Error) {
-						trace("Depth Image Error :: " + e.message);
 					}
 					break;
 			}
