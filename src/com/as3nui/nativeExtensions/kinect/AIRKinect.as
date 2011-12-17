@@ -363,7 +363,6 @@ package com.as3nui.nativeExtensions.kinect {
 		 * Called when the kinect has started
 		 */ 
 		private function onStarted():void{
-			trace("started");
 			_KINECT_RUNNING = true;
 			if (rgbEnabled) {
 				_rgbFrame = new ByteArray();
