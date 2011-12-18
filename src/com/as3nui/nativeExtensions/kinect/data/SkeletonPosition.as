@@ -5,6 +5,10 @@
  * Time: 6:17 PM
  */
 package com.as3nui.nativeExtensions.kinect.data {
+	import com.as3nui.nativeExtensions.kinect.AIRKinect;
+
+	import flash.geom.Point;
+
 	import flash.geom.Vector3D;
 
 	/**
@@ -245,6 +249,24 @@ package com.as3nui.nativeExtensions.kinect.data {
 		 */
 		public function getElementRaw(index:uint):Vector3D {
 			return _elements[index];
+		}
+
+		/**
+		 * Returns a Elements position in RGB Space
+		 * @param index 	Element to get raw position of
+		 * @return			2D Position of element in RGB Space
+		 */
+		public function getElementInRGBSpace(index:uint):Point {
+			return AIRKinect.getColorPixelFromElement(this.getElementRaw(index));
+		}
+
+		/**
+		 * Returns a Elements position in Depth Space
+		 * @param index 	Element to get raw position of
+		 * @return			2D Position of element in Depth Space
+		 */
+		public function getElementInDepthSpace(index:uint):Point {
+			return AIRKinect.getDepthPixelFromElement(this.getElementRaw(index));
 		}
 
 		public function get trackingID():uint {

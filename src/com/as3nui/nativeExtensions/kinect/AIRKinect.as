@@ -19,6 +19,9 @@ package com.as3nui.nativeExtensions.kinect {
 	import flash.external.ExtensionContext;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.geom.Vector3D;
+	import flash.system.Capabilities;
+	import flash.system.System;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.desktop.NativeApplication;
@@ -136,6 +139,20 @@ package com.as3nui.nativeExtensions.kinect {
 		 */
 		public static function getTransformSmoothingParameters():NUITransformSmoothParameters {
 			return instance.getTransformSmoothingParameters();
+		}
+
+		/**
+		 * &see AIRKinect.getColorPixelFromElement
+		 */
+		public static function getColorPixelFromElement(element:Vector3D):Point {
+			return instance.getColorPixelFromElement(element);
+		}
+
+		/**
+		 * @see AIRKinect.getDepthPixelFromElement
+		 */
+		public static function getDepthPixelFromElement(element:Vector3D):Point {
+			return instance.getDepthPixelFromElement(element);
 		}
 
 		/**
@@ -439,7 +456,7 @@ package com.as3nui.nativeExtensions.kinect {
 		 * @param angle		Desired angle to move to
 		 */
 		public function setKinectAngle(angle:int):void {
-			if(_isPhysicalKinectInit) _extCtx.call('setKinectAngle', angle);
+			if(_isPhysicalKinectInit && !isOSX()) _extCtx.call('setKinectAngle', angle);
 		}
 
 		/**
@@ -447,7 +464,7 @@ package com.as3nui.nativeExtensions.kinect {
 		 * @return			Angle in Degrees
 		 */
 		public function getKinectAngle():int {
-			if(!_isPhysicalKinectInit) return NaN;
+			if(!_isPhysicalKinectInit || isOSX()) return NaN;
 			return _extCtx.call('getKinectAngle') as int;
 		}
 
@@ -461,6 +478,28 @@ package com.as3nui.nativeExtensions.kinect {
 
 			_nuiTransformSmoothingParameters = nuiTransformSmoothingParameters;
 			return _extCtx.call('setTransformSmoothingParameters', _nuiTransformSmoothingParameters);
+		}
+
+		/**
+		 * Converts a Skeleton Element into a RGB Pixel Coordinate
+		 * @param element		Element of the skeleton to convert
+		 * @return				Point in RGB Space of element
+		 */
+		public function getColorPixelFromElement(element:Vector3D):Point {
+			if (isOSX()) return null;
+			if(!_isPhysicalKinectInit || !rgbEnabled) return null;
+			return _extCtx.call('getColorPixelFromJointCoordinates', _rgbResolution, element.x,  element.y,  element.z) as Point;
+		}
+
+		/**
+		 * Converts a Skeleton Element into a Depth Pixel Coordinate
+		 * @param element		Element of the skeleton to convert
+		 * @return				Point in Depth Space of element
+		 */
+		public function getDepthPixelFromElement(element:Vector3D):Point {
+			if (isOSX()) return null;
+			if(!_isPhysicalKinectInit) return null;
+			return _extCtx.call('getDepthPixelFromJointCoordinates', -element.x,  element.y,  element.z) as Point;
 		}
 
 		/**
@@ -615,6 +654,14 @@ package com.as3nui.nativeExtensions.kinect {
 					}
 					break;
 			}
+		}
+
+		/**
+		 * Tests for MAC OSX
+		 * @return		Boolean status of OS X
+		 */
+		private function isOSX():Boolean {
+			return Capabilities.os.indexOf("Max OS") != -1;
 		}
 	}
 }
