@@ -1,5 +1,5 @@
 package com.as3nui.nativeExtensions.kinect.events {
-	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectSkeletonFrame;
 
 	import flash.events.Event;
 
@@ -16,9 +16,9 @@ package com.as3nui.nativeExtensions.kinect.events {
 		/**
 		 * Current Skeleton Frame
 		 */
-		private var _skeletonFrame:SkeletonFrame;
+		private var _skeletonFrame:AIRKinectSkeletonFrame;
 
-		public function SkeletonFrameEvent(skeletonFrame:SkeletonFrame) {
+		public function SkeletonFrameEvent(skeletonFrame:AIRKinectSkeletonFrame) {
 			super(UPDATE);
 			_skeletonFrame = skeletonFrame;
 		}
@@ -34,7 +34,7 @@ package com.as3nui.nativeExtensions.kinect.events {
 		/**
 		 * Skeleton Frame for this event
 		 */
-		public function get skeletonFrame():SkeletonFrame {
+		public function get skeletonFrame():AIRKinectSkeletonFrame {
 			return _skeletonFrame;
 		}
 	}

@@ -4,7 +4,7 @@
  * Date: 11/11/11
  * Time: 11:14 AM
  */
-package com.as3nui.nativeExtensions.kinect.data {
+package com.as3nui.nativeExtensions.kinect.settings {
 
 	/**
 	 * Flags for initialization of the Kinect. To combine flags use the following syntax.

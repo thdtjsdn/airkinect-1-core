@@ -4,7 +4,7 @@
  * Date: 11/11/11
  * Time: 11:12 AM
  */
-package com.as3nui.nativeExtensions.kinect.data {
+package com.as3nui.nativeExtensions.kinect.settings {
 
 	/**
 	 * Available Resolutions for the cameras in the Kinect.

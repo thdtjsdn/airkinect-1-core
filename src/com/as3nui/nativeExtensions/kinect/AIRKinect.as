@@ -5,27 +5,26 @@
  * Time: 3:09 PM
  */
 package com.as3nui.nativeExtensions.kinect {
-	import com.as3nui.nativeExtensions.kinect.data.AIRKinectCameraResolutions;
-	import com.as3nui.nativeExtensions.kinect.data.AIRKinectFlags;
-	import com.as3nui.nativeExtensions.kinect.data.NUITransformSmoothParameters;
-	import com.as3nui.nativeExtensions.kinect.data.SkeletonFrame;
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectSkeletonJoint;
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectSkeletonFrame;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
 	import com.as3nui.nativeExtensions.kinect.events.DeviceStatusEvent;
 	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
-	
+	import com.as3nui.nativeExtensions.kinect.settings.AIRKinectCameraResolutions;
+	import com.as3nui.nativeExtensions.kinect.settings.AIRKinectFlags;
+	import com.as3nui.nativeExtensions.kinect.settings.AIRKinectTransformSmoothParameters;
+
+	import flash.desktop.NativeApplication;
 	import flash.display.BitmapData;
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.StatusEvent;
 	import flash.external.ExtensionContext;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
-	import flash.geom.Vector3D;
 	import flash.system.Capabilities;
-	import flash.system.System;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
-	import flash.desktop.NativeApplication;
-	import flash.events.Event;
 
 	/**
 	 * Main Singleton class providing access to Kinect native context.
@@ -130,29 +129,29 @@ package com.as3nui.nativeExtensions.kinect {
 		/**
 		 * @see AIRKinect.setTransformSmoothingParameters
 		 */
-		public static function setTransformSmoothingParameters(nuiTransformSmoothingParameters:NUITransformSmoothParameters):Boolean {
+		public static function setTransformSmoothingParameters(nuiTransformSmoothingParameters:AIRKinectTransformSmoothParameters):Boolean {
 			return instance.setTransformSmoothingParameters(nuiTransformSmoothingParameters);
 		}
 
 		/**
 		 * @see AIRKinect.getTransformSmoothingParameters
 		 */
-		public static function getTransformSmoothingParameters():NUITransformSmoothParameters {
+		public static function getTransformSmoothingParameters():AIRKinectTransformSmoothParameters {
 			return instance.getTransformSmoothingParameters();
 		}
 
 		/**
-		 * &see AIRKinect.getColorPixelFromElement
+		 * &see AIRKinect.getColorPixelFromJoint
 		 */
-		public static function getColorPixelFromElement(element:Vector3D):Point {
-			return instance.getColorPixelFromElement(element);
+		public static function getColorPixelFromJoint(joint:AIRKinectSkeletonJoint):Point {
+			return instance.getColorPixelFromJoint(joint);
 		}
 
 		/**
-		 * @see AIRKinect.getDepthPixelFromElement
+		 * @see AIRKinect.getDepthPixelFromJoint
 		 */
-		public static function getDepthPixelFromElement(element:Vector3D):Point {
-			return instance.getDepthPixelFromElement(element);
+		public static function getDepthPixelFromJoint(joint:AIRKinectSkeletonJoint):Point {
+			return instance.getDepthPixelFromJoint(joint);
 		}
 
 		/**
@@ -251,7 +250,7 @@ package com.as3nui.nativeExtensions.kinect {
 		/**
 		 * Skeleton Frame Smoothing Parameters
 		 */
-		private var _nuiTransformSmoothingParameters:NUITransformSmoothParameters;
+		private var _nuiTransformSmoothingParameters:AIRKinectTransformSmoothParameters;
 
 		/**
 		 * Byte Array of current pixel data for RGB frame
@@ -280,26 +279,26 @@ package com.as3nui.nativeExtensions.kinect {
 
 		/**
 		 * Flags to be passed to native kinect code for initalization.
-		 * @see AIRKinectFlags
+		 * @see com.as3nui.nativeExtensions.kinect.settings.AIRKinectFlags
 		 */
 		private var _flags:ByteArray;
 
 		/**
 		 * Resolution for the RGB camera output
-		 * @see AIRKinectCameraResolutions
+		 * @see com.as3nui.nativeExtensions.kinect.settings.AIRKinectCameraResolutions
 		 */
 		private var _rgbResolution:uint;
 
 		/**
 		 * Resolution for the Depth camera output
-		 * @see AIRKinectCameraResolutions
+		 * @see com.as3nui.nativeExtensions.kinect.settings.AIRKinectCameraResolutions
 		 */
 		private var _depthResolution:uint;
 
 		/**
 		 * Provides a point container for Width (x) and Height (y) of a requested Resolution
 		 * @see AIRKinect.getResolutionToSize
-		 * @see AIRKinectCameraResolutions
+		 * @see com.as3nui.nativeExtensions.kinect.settings.AIRKinectCameraResolutions
 		 */
 		private var _resolutionSize:Point;
 
@@ -334,7 +333,7 @@ package com.as3nui.nativeExtensions.kinect {
 
 		/**
 		 * Attempts to initialize the Kinect and starts any combination of Skeleton, RGB, and depth tracking.
-		 * @param kinectFlags (optional)		Flags informing the Kinect on which data is required. Default is Skeleton only. @see AIRKinectFlags
+		 * @param kinectFlags (optional)		Flags informing the Kinect on which data is required. Default is Skeleton only. @see com.as3nui.nativeExtensions.kinect.settings.AIRKinectFlags
 		 * @param rgbResolution (optional)		Sets the resolution of the RGB camera. Only used if the AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_COLOR is used
 		 * 										Valid RGB Resolutions are:
 		 * 											<ul>
@@ -473,7 +472,7 @@ package com.as3nui.nativeExtensions.kinect {
 		 * @param nuiTransformSmoothingParameters		Smoothing Object to use to smooth Skeleton Frames
 		 * @return			Boolean of success
 		 */
-		public function setTransformSmoothingParameters(nuiTransformSmoothingParameters:NUITransformSmoothParameters):Boolean {
+		public function setTransformSmoothingParameters(nuiTransformSmoothingParameters:AIRKinectTransformSmoothParameters):Boolean {
 			if(!_isPhysicalKinectInit) return false;
 
 			_nuiTransformSmoothingParameters = nuiTransformSmoothingParameters;
@@ -481,32 +480,32 @@ package com.as3nui.nativeExtensions.kinect {
 		}
 
 		/**
-		 * Converts a Skeleton Element into a RGB Pixel Coordinate
-		 * @param element		Element of the skeleton to convert
-		 * @return				Point in RGB Space of element
+		 * Converts a Skeleton Joint into a RGB Pixel Coordinate
+		 * @param joint			Joint of the skeleton to convert
+		 * @return				Point in RGB Space of joint
 		 */
-		public function getColorPixelFromElement(element:Vector3D):Point {
+		public function getColorPixelFromJoint(joint:AIRKinectSkeletonJoint):Point {
 			if (isOSX()) return null;
 			if(!_isPhysicalKinectInit || !rgbEnabled) return null;
-			return _extCtx.call('getColorPixelFromJointCoordinates', _rgbResolution, element.x,  element.y,  element.z) as Point;
+			return _extCtx.call('getColorPixelFromJointCoordinates', _rgbResolution, joint.x,  joint.y,  joint.z) as Point;
 		}
 
 		/**
-		 * Converts a Skeleton Element into a Depth Pixel Coordinate
-		 * @param element		Element of the skeleton to convert
-		 * @return				Point in Depth Space of element
+		 * Converts a Skeleton Joint into a Depth Pixel Coordinate
+		 * @param joint			Joint of the skeleton to convert
+		 * @return				Point in Depth Space of joint
 		 */
-		public function getDepthPixelFromElement(element:Vector3D):Point {
+		public function getDepthPixelFromJoint(joint:AIRKinectSkeletonJoint):Point {
 			if (isOSX()) return null;
 			if(!_isPhysicalKinectInit) return null;
-			return _extCtx.call('getDepthPixelFromJointCoordinates', -element.x,  element.y,  element.z) as Point;
+			return _extCtx.call('getDepthPixelFromJointCoordinates', -joint.x,  joint.y,  joint.z) as Point;
 		}
 
 		/**
 		 * Retrieves the current Smoothing Parameters from the Native side
-		 * @return	NUITransformSmoothParameters with current smoothing data
+		 * @return	com.as3nui.nativeExtensions.kinect.settings.AIRKinectTransformSmoothParameters with current smoothing data
 		 */
-		public function getTransformSmoothingParameters():NUITransformSmoothParameters {
+		public function getTransformSmoothingParameters():AIRKinectTransformSmoothParameters {
 			return _nuiTransformSmoothingParameters;
 		}
 
@@ -612,7 +611,7 @@ package com.as3nui.nativeExtensions.kinect {
 				case SKELETON_FRAME:
 					if(_isPhysicalKinectInit) {
 						try {
-							var currentSkeleton:SkeletonFrame = _extCtx.call('getSkeletonFrameData') as SkeletonFrame;
+							var currentSkeleton:AIRKinectSkeletonFrame = _extCtx.call('getSkeletonFrameData') as AIRKinectSkeletonFrame;
 							this.dispatchEvent(new SkeletonFrameEvent(currentSkeleton));
 						} catch(e:Error) {
 							trace("Skeleton Frame Error :: " + e.message);

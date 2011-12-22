@@ -9,7 +9,7 @@ package com.as3nui.nativeExtensions.kinect.data {
 	/**
 	 * Holds all the skeleton information for a frame. A Frame consists of 0, 1, or multiple Skeleton Positions
 	 */
-	public class SkeletonFrame {
+	public class AIRKinectSkeletonFrame {
 		/**
 		 * Max number of skeletons avaliable for the Kinect with Full joint data
 		 */
@@ -18,13 +18,13 @@ package com.as3nui.nativeExtensions.kinect.data {
 		/**
 		 * Collection of All Skeleton Positions for this current Frame
 		 */
-		private var _skeletonsPositions:Vector.<SkeletonPosition>;
+		private var _skeletonsPositions:Vector.<AIRKinectSkeleton>;
 
 		/**
 		 * Constructor
 		 * @param skeletonsPositions			Skeleton Positions in this frame
 		 */
-		public function SkeletonFrame(skeletonsPositions:Vector.<SkeletonPosition>) {
+		public function AIRKinectSkeletonFrame(skeletonsPositions:Vector.<AIRKinectSkeleton>) {
 			_skeletonsPositions = skeletonsPositions;
 		}
 
@@ -33,14 +33,14 @@ package com.as3nui.nativeExtensions.kinect.data {
 		 * @param index			Index of the skeleton to retrieve
 		 * @return				Skeleton Positon for skeleton at that index
 		 */
-		public function getSkeletonPosition(index:uint):SkeletonPosition {
+		public function getSkeletonPosition(index:uint):AIRKinectSkeleton {
 			return _skeletonsPositions[index];
 		}
 
 		/**
 		 * Returns all the Skeletons for the current Frame
 		 */
-		public function get skeletonsPositions():Vector.<SkeletonPosition> {
+		public function get skeletonsPositions():Vector.<AIRKinectSkeleton> {
 			return _skeletonsPositions;
 		}
 

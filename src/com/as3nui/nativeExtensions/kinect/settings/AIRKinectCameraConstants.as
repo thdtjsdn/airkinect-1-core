@@ -4,7 +4,7 @@
  * Date: 10/3/11
  * Time: 11:04 AM
  */
-package com.as3nui.nativeExtensions.kinect.data {
+package com.as3nui.nativeExtensions.kinect.settings {
 
 	/**
 	 * Camera Constants from the Kinect SDK to provide Focal Length based position translations.
