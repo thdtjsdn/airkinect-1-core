@@ -141,7 +141,7 @@ package com.as3nui.nativeExtensions.kinect {
 		}
 
 		/**
-		 * &see AIRKinect.getColorPixelFromJoint
+		 * @see AIRKinect.getColorPixelFromJoint
 		 */
 		public static function getColorPixelFromJoint(joint:AIRKinectSkeletonJoint):Point {
 			return instance.getColorPixelFromJoint(joint);

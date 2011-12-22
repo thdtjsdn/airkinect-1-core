@@ -1,0 +1,9 @@
+set flex_path="c:\path\to\flexsdk\"
+set source_path="../../src"
+
+@echo off
+cls
+%flex_path%\bin\aasdoc ^
+-doc-sources %source_path% ^
+-main-title "AIRKinect API Documentation" ^
+-output bin
