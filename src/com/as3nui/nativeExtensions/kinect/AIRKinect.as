@@ -485,7 +485,6 @@ package com.as3nui.nativeExtensions.kinect {
 		 * @return				Point in RGB Space of joint
 		 */
 		public function getColorPixelFromJoint(joint:AIRKinectSkeletonJoint):Point {
-			if (isOSX()) return null;
 			if(!_isPhysicalKinectInit || !rgbEnabled) return null;
 			return _extCtx.call('getColorPixelFromJointCoordinates', _rgbResolution, joint.x,  joint.y,  joint.z) as Point;
 		}
@@ -496,7 +495,6 @@ package com.as3nui.nativeExtensions.kinect {
 		 * @return				Point in Depth Space of joint
 		 */
 		public function getDepthPixelFromJoint(joint:AIRKinectSkeletonJoint):Point {
-			if (isOSX()) return null;
 			if(!_isPhysicalKinectInit) return null;
 			return _extCtx.call('getDepthPixelFromJointCoordinates', -joint.x,  joint.y,  joint.z) as Point;
 		}
