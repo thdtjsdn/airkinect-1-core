@@ -5,15 +5,15 @@
  * Time: 3:09 PM
  */
 package com.as3nui.nativeExtensions.kinect {
-	import com.as3nui.nativeExtensions.kinect.data.AIRKinectSkeletonJoint;
 	import com.as3nui.nativeExtensions.kinect.data.AIRKinectSkeletonFrame;
+	import com.as3nui.nativeExtensions.kinect.data.AIRKinectSkeletonJoint;
 	import com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent;
 	import com.as3nui.nativeExtensions.kinect.events.DeviceStatusEvent;
 	import com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent;
 	import com.as3nui.nativeExtensions.kinect.settings.AIRKinectCameraResolutions;
 	import com.as3nui.nativeExtensions.kinect.settings.AIRKinectFlags;
 	import com.as3nui.nativeExtensions.kinect.settings.AIRKinectTransformSmoothParameters;
-
+	
 	import flash.desktop.NativeApplication;
 	import flash.display.BitmapData;
 	import flash.events.Event;
@@ -39,6 +39,13 @@ package com.as3nui.nativeExtensions.kinect {
 	 * </p>
 	 * </p>
 	 */
+	[Event(name="started", type="com.as3nui.nativeExtensions.kinect.events.DeviceStatusEvent")]
+	[Event(name="disconnected", type="com.as3nui.nativeExtensions.kinect.events.DeviceStatusEvent")]
+	[Event(name="reconnected", type="com.as3nui.nativeExtensions.kinect.events.DeviceStatusEvent")]
+	[Event(name="rgb", type="com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent")]
+	[Event(name="depth", type="com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent")]
+	[Event(name="playerMask", type="com.as3nui.nativeExtensions.kinect.events.CameraFrameEvent")]
+	[Event(name="update", type="com.as3nui.nativeExtensions.kinect.events.SkeletonFrameEvent")]
 	public class AIRKinect extends EventDispatcher {
 
 		/**
@@ -181,6 +188,20 @@ package com.as3nui.nativeExtensions.kinect {
 		public static function get skeletonEnabled():Boolean {
 			return instance.skeletonEnabled;
 		}
+		
+		/**
+		 * @see AIRKinect.playerMaskEnabled
+		 */
+		public static function get playerMaskEnabled():Boolean {
+			return instance.playerMaskEnabled;
+		}
+		
+		/**
+		 * @see AIRKinect.playerMaskEnabled
+		 */
+		public static function set playerMaskEnabled(value:Boolean):void {
+			instance.playerMaskEnabled = value;
+		}
 
 		/**
 		 * @see EventDispatcher.addEventListener
@@ -276,6 +297,16 @@ package com.as3nui.nativeExtensions.kinect {
 		 * Format is x,y,z where each is a Unsigned Short.
 		 */
 		private var _depthPoints:ByteArray;
+		
+		/**
+		 *  Byte Array of current player data for Player Mask Frame
+		 */
+		private var _playerMaskFrame:ByteArray;
+		
+		/**
+		 * Bitmap Data for current Player Mask Frame
+		 */
+		private var _playerMaskImage:BitmapData;
 
 		/**
 		 * Flags to be passed to native kinect code for initalization.
@@ -393,9 +424,35 @@ package com.as3nui.nativeExtensions.kinect {
 				}else{
 					_depthPoints = new ByteArray();
 				}
+				_playerMaskFrame = new ByteArray();
+				_playerMaskImage = new BitmapData(depthSize.x, depthSize.y, true);
 			}
+			
+			//send player masking boolean to the extension
+			applyPlayerMaskEnabled();
 			//Add standard to shutdown Kinect when the native application window is closed
 			NativeApplication.nativeApplication.addEventListener(Event.EXITING, shutdown);
+		}
+		
+		/**
+		 * Sends the player masking setting to the extension
+		 * This is called whenever the boolean is changed through get/set
+		 * and when the kinect is started
+		 */ 
+		private function applyPlayerMaskEnabled():void
+		{
+			//update the mask image
+			if(_playerMaskImage) {
+				if(_playerMaskEnabled) {
+					_playerMaskImage.fillRect(_playerMaskImage.rect, 0x00000000);
+				} else {
+					_playerMaskImage.fillRect(_playerMaskImage.rect, 0xFF000000);
+				}
+				this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.PLAYER_MASK, _playerMaskImage.clone()));
+			}
+			if(_KINECT_RUNNING && _isPhysicalKinectInit) {
+				_extCtx.call("setPlayerMaskEnabled", _playerMaskEnabled);
+			}
 		}
 
 		/**
@@ -412,7 +469,9 @@ package com.as3nui.nativeExtensions.kinect {
 		 */
 		private function cleanupNativeExtension():void {
 			if (_extCtx) {
-				if(_isPhysicalKinectInit) _extCtx.call("kinectStop");
+				if(_isPhysicalKinectInit) {
+					_extCtx.call("kinectStop");
+				}
 
 				_isPhysicalKinectInit = false;
 				_extCtx.removeEventListener(StatusEvent.STATUS, onStatus);
@@ -440,6 +499,13 @@ package com.as3nui.nativeExtensions.kinect {
 			if (_depthImage) {
 				_depthImage.dispose();
 				_depthImage = null;
+			}
+			
+			//Cleanup Player Mask Frame and Image
+			if (_playerMaskFrame) _playerMaskFrame = null;
+			if (_playerMaskImage) {
+				_playerMaskImage.dispose();
+				_playerMaskImage = null;
 			}
 		}
 
@@ -534,7 +600,24 @@ package com.as3nui.nativeExtensions.kinect {
 		public function get skeletonEnabled():Boolean {
 			return (_flags[0] & AIRKinectFlags.NUI_INITIALIZE_FLAG_USES_SKELETON) != 0;
 		}
-
+		
+		private var _playerMaskEnabled:Boolean;
+		
+		/**
+		 * Boolean, toggles player mask generation
+		 */ 
+		public function get playerMaskEnabled():Boolean {
+			return _playerMaskEnabled;
+		}
+		
+		public function set playerMaskEnabled(value:Boolean):void {
+			if(value != _playerMaskEnabled)
+			{
+				_playerMaskEnabled = value;
+				applyPlayerMaskEnabled();
+			}
+		}
+		
 		/**
 		 * Helper function to get Resolution of the RGB image
 		 */
@@ -645,6 +728,15 @@ package com.as3nui.nativeExtensions.kinect {
 
 							_depthImage.setPixels(new Rectangle(0, 0, _depthImage.width, _depthImage.height), _depthFrame);
 							this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage.clone(), _depthPoints));
+							
+							if(_playerMaskEnabled) {
+								_extCtx.call('getPlayerMask', _playerMaskFrame);
+								_playerMaskFrame.position = 0;
+								_playerMaskFrame.endian = Endian.LITTLE_ENDIAN;
+								
+								_playerMaskImage.setPixels(_playerMaskImage.rect, _playerMaskFrame);
+								this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.PLAYER_MASK, _playerMaskImage.clone()));
+							}
 						} catch(e:Error) {
 							trace("Depth Image Error :: " + e.message);
 						}

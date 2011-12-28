@@ -11,11 +11,15 @@ package com.as3nui.nativeExtensions.kinect.events {
 		/**
 		 * Dispatched with new RGB frame from Kinect Camera
 		 */
-		public static const RGB:String 		= "rgb_frame_update";
+		public static const RGB:String 		= "rgb";
 		/**
-		 * Dispatched with new Depth Frame from Kinect Camers
+		 * Dispatched with new Depth Frame from Kinect Camera
 		 */
-		public static const DEPTH:String 	= "depth_frame_update";
+		public static const DEPTH:String 	= "depth";
+		/**
+		 * Dispatched with new Player Mask Frame from Kinect Camera
+		 */
+		public static const PLAYER_MASK:String 	= "playerMask";
 
 		/**
 		 * BitmapData for the current frame

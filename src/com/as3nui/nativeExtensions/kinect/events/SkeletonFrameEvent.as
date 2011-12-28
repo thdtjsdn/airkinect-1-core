@@ -11,7 +11,7 @@ package com.as3nui.nativeExtensions.kinect.events {
 		/**
 		 * Dispatched with a new skeleton frame
 		 */
-		public static const UPDATE:String = "skeleton_frame_update";
+		public static const UPDATE:String = "update";
 
 		/**
 		 * Current Skeleton Frame
