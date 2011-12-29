@@ -73,7 +73,12 @@ package com.as3nui.nativeExtensions.kinect {
 		 * Dispatched from Native code when a new Depth Frame is available
 		 */
 		private static const DEPTH_FRAME:String 				= "depthFrame";
-		
+
+		/**
+		 * Dispatched from Native code when a new Player Mask Frame
+		 */
+		private static const PLAYER_MASK_FRAME:String 			= "playerMaskFrame";
+
 		/**
 		 * Dispatched as type in a Device Status event, indicates the kinect has been started.
 		 */
@@ -728,17 +733,22 @@ package com.as3nui.nativeExtensions.kinect {
 
 							_depthImage.setPixels(new Rectangle(0, 0, _depthImage.width, _depthImage.height), _depthFrame);
 							this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.DEPTH, _depthImage.clone(), _depthPoints));
-							
-							if(_playerMaskEnabled) {
-								_extCtx.call('getPlayerMask', _playerMaskFrame);
-								_playerMaskFrame.position = 0;
-								_playerMaskFrame.endian = Endian.LITTLE_ENDIAN;
-								
-								_playerMaskImage.setPixels(_playerMaskImage.rect, _playerMaskFrame);
-								this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.PLAYER_MASK, _playerMaskImage.clone()));
-							}
 						} catch(e:Error) {
 							trace("Depth Image Error :: " + e.message);
+						}
+					}
+					break;
+				case PLAYER_MASK_FRAME:
+					if(_isPhysicalKinectInit && _playerMaskEnabled) {
+						try {
+							_extCtx.call('getPlayerMask', _playerMaskFrame);
+							_playerMaskFrame.position = 0;
+							_playerMaskFrame.endian = Endian.LITTLE_ENDIAN;
+
+							_playerMaskImage.setPixels(_playerMaskImage.rect, _playerMaskFrame);
+							this.dispatchEvent(new CameraFrameEvent(CameraFrameEvent.PLAYER_MASK, _playerMaskImage.clone()));
+						} catch(e:Error) {
+							trace("Player Mask Image Error :: " + e.message);
 						}
 					}
 					break;
