@@ -16,39 +16,39 @@ package com.as3nui.nativeExtensions.kinect.data {
 		public static const MAX_NUM_SKELETONS:uint = 2;
 
 		/**
-		 * Collection of All Skeleton Positions for this current Frame
+		 * Collection of All Skeletons for this current Frame
 		 */
-		private var _skeletonsPositions:Vector.<AIRKinectSkeleton>;
+		private var _skeletons:Vector.<AIRKinectSkeleton>;
 
 		/**
 		 * Constructor
-		 * @param skeletonsPositions			Skeleton Positions in this frame
+		 * @param skeletons			Skeleton Positions in this frame
 		 */
-		public function AIRKinectSkeletonFrame(skeletonsPositions:Vector.<AIRKinectSkeleton>) {
-			_skeletonsPositions = skeletonsPositions;
+		public function AIRKinectSkeletonFrame(skeletons:Vector.<AIRKinectSkeleton>) {
+			_skeletons = skeletons;
 		}
 
 		/**
-		 * Get the Position of a Skeleton by index in the Vector
+		 * Get a Skeleton by index in the Vector
 		 * @param index			Index of the skeleton to retrieve
-		 * @return				Skeleton Positon for skeleton at that index
+		 * @return				AIRKinectSkeleton for skeleton at that index
 		 */
-		public function getSkeletonPosition(index:uint):AIRKinectSkeleton {
-			return _skeletonsPositions[index];
+		public function getSkeleton(index:uint):AIRKinectSkeleton {
+			return _skeletons[index];
 		}
 
 		/**
 		 * Returns all the Skeletons for the current Frame
 		 */
-		public function get skeletonsPositions():Vector.<AIRKinectSkeleton> {
-			return _skeletonsPositions;
+		public function get skeletons():Vector.<AIRKinectSkeleton> {
+			return _skeletons;
 		}
 
 		/**
 		 * Number of skeletons found in this frame
 		 */
 		public function get numSkeletons():int {
-			return _skeletonsPositions.length;
+			return _skeletons.length;
 		}
 	}
 }

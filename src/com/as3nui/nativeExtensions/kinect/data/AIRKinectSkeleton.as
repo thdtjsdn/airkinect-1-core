@@ -13,7 +13,7 @@ package com.as3nui.nativeExtensions.kinect.data {
 	import flash.geom.Vector3D;
 
 	/**
-	 * SkeletonPosition holds all body joints (hands, head, arms, etc)
+	 * AIRKinectSkeleton holds all body joints (hands, head, arms, etc)
 	 * Also provides translation options and scaling options for all position vectors
 	 */
 	public class AIRKinectSkeleton {
@@ -199,7 +199,7 @@ package com.as3nui.nativeExtensions.kinect.data {
 		/**
 		 * Returns the position of a current joint of a skelenton
 		 * @param index			Joint index to look up
-		 * @return				AIRKinectSkeletonJoint with the position of the current joint translated according to SkeletonPosition.TRANSLATION_MODE
+		 * @return				AIRKinectSkeletonJoint with the position of the current joint translated according to AIRKinectSkeleton.TRANSLATION_MODE
 		 */
 		public function getJoint(index:uint):AIRKinectSkeletonJoint {
 			var transformedJoint:AIRKinectSkeletonJoint = _joints[index].getClone() as AIRKinectSkeletonJoint;
