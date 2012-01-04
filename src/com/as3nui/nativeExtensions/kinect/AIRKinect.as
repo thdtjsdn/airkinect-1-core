@@ -264,6 +264,14 @@ package com.as3nui.nativeExtensions.kinect {
 			return instance.depthSize;
 		}
 
+		/**
+		 * Tests for MAC OSX
+		 * @return		Boolean status of OS X
+		 */
+		public static function isOSX():Boolean {
+			return Capabilities.os.indexOf("Max OS") != -1;
+		}
+
 		//----------------------------------
 		// Begin Instance
 		//----------------------------------
@@ -753,14 +761,6 @@ package com.as3nui.nativeExtensions.kinect {
 					}
 					break;
 			}
-		}
-
-		/**
-		 * Tests for MAC OSX
-		 * @return		Boolean status of OS X
-		 */
-		private function isOSX():Boolean {
-			return Capabilities.os.indexOf("Max OS") != -1;
 		}
 	}
 }
