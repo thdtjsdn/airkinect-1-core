@@ -270,6 +270,26 @@ package com.as3nui.nativeExtensions.kinect.data {
 			return AIRKinect.getDepthPixelFromJoint(this.getJointRaw(index));
 		}
 
+		/**
+		 * Return a joints position in Player Mask Space
+		 * @param index		Joint to get raw position of
+		 * @return			2D Position of joint in Player Mask Space
+		 */
+		public function getJointInPlayerMaskSpace(index:uint):Point {
+			var point:Point;
+			if(AIRKinect.isOSX()){
+				point = getJointInRGBSpace(index);
+			}else{
+				point = getJointInDepthSpace(index);
+				point.x = AIRKinect.depthSize.x - point.x;
+				var ratio:uint = AIRKinect.rgbSize.x / 320;
+				point.x *= ratio;
+				point.y *= ratio;
+			}
+
+			return point;
+		}
+
 		public function get trackingID():uint {
 			return _trackingID;
 		}
