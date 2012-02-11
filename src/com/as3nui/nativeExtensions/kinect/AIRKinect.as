@@ -585,7 +585,7 @@ package com.as3nui.nativeExtensions.kinect {
 		 */
 		public function getDepthPixelFromJoint(joint:AIRKinectSkeletonJoint):Point {
 			if(!_isPhysicalKinectInit) return null;
-			return _extCtx.call('getDepthPixelFromJointCoordinates', -joint.x,  joint.y,  joint.z) as Point;
+			return _extCtx.call('getDepthPixelFromJointCoordinates', joint.x,  joint.y,  joint.z) as Point;
 		}
 
 		/**

@@ -291,7 +291,6 @@ package com.as3nui.nativeExtensions.kinect.data {
 				point = getJointInRGBSpace(index);
 			}else{
 				point = getJointInDepthSpace(index);
-				point.x = AIRKinect.depthSize.x - point.x;
 				var ratio:uint = AIRKinect.rgbSize.x / 320;
 				point.x *= ratio;
 				point.y *= ratio;
